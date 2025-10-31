@@ -1,0 +1,43 @@
+{
+   glibc-tls-leak
+   Memcheck:Leak
+   ...
+   fun:_dl_allocate_tls
+}
+
+{
+   glibc-thread-leak
+   Memcheck:Leak
+   ...
+   fun:allocate_stack
+   fun:pthread_create*
+}
+
+{
+   openssl-init-leak
+   Memcheck:Leak
+   ...
+   fun:CRYPTO_malloc
+   fun:OPENSSL_init_crypto
+}
+
+{
+   openssl-ctx-leak
+   Memcheck:Leak
+   ...
+   fun:SSL_CTX_new
+}
+
+{
+   openssl-ssl-leak
+   Memcheck:Leak
+   ...
+   fun:SSL_new
+}
+
+{
+   libcrypto-leak
+   Memcheck:Leak
+   ...
+   fun:CRYPTO_malloc
+}
