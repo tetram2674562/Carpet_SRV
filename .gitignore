@@ -2,3 +2,8 @@
 .vscode/
 build/
 cmake-build-debug/
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+CARPET_SRV

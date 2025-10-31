@@ -12,8 +12,41 @@ This is a little minecraft server 1.4.7 written in C++ 98. It's mainly made for 
 - Basic ping response 
 - Basic login procedure
 - Packet encryption (very important)
-- Basic player management (kick, list)
+- Basic command terminal (/stop, /kickall, /list)
+### Dependencies
 
+- Cmake
+- Openssl 3.0 minimum
+
+### Installing
+
+First clone this repository 
+
+```
+git clone https://github.com/tetram2674562/Carpet_srv.git
+```
+Then enter the directory
+
+```
+cd Carpet_srv
+```
+
+Then generate the makefile
+
+```
+cmake .
+```
+
+End up with this command to compile
+```
+make -j <number of cores>
+```
+
+To start it just do the following
+
+```
+./CARPET_SRV
+```
 
 ### TODO 
 
@@ -31,7 +64,6 @@ This project follow a few rules :
 
 - No external library other than openssl (maybe libnoise ? I'll try to take a look, but I want to keep it with less dependancies as possible) 
 - C++98 is the standard. This won't change.
-- You can use AI, but only to fix bugs or reviewing your code, not to write the code
 
 
 *I hate data races and memory leak >:(*
