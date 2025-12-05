@@ -8,8 +8,11 @@
 #include <vector>
 #include <netinet/in.h>
 #include <packet/Packet.h>
+#include <packet/handshake/ServerPingPacket.h>
+#include <map>
 using namespace std;
 namespace packet {
+
     Packet::Packet() : packetID(-1), size(0) {
     }
 

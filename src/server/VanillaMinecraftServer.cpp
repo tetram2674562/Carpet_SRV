@@ -19,6 +19,7 @@
 #include "utils/TimeUtils.h"
 #include "utils/LockGuard.h"
 using namespace std;
+using namespace utils;
 namespace server {
     VanillaMinecraftServer VanillaMinecraftServer::server;
     VanillaMinecraftServer::VanillaMinecraftServer() : keypair(1024), running(true), server_socket(-1), maxPlayers(20) {}
@@ -98,7 +99,7 @@ namespace server {
 
     }
 
-    void VanillaMinecraftServer::requestKickPlayer(const entity::Player* player, const std::basic_string<unsigned short> &reason) {
+    void VanillaMinecraftServer::requestKickPlayer(const entity::Player* player, const utils::UTF16String & reason) {
         LockGuard lock(this->playersMutex);
         for (size_t i = 0; i < this->players.size(); ++i) {
             if (this->players[i] == player) {

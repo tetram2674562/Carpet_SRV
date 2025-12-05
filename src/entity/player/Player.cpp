@@ -12,7 +12,7 @@ namespace entity {
     // Should be called everytick
     void entity::Player::update() {}
 
-    void Player::kickPlayer(const basic_string<unsigned short> &reason) {
+    void Player::kickPlayer(const utils::UTF16String &reason) {
         connection.disconnect(reason);
     }
 

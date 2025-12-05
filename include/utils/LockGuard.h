@@ -6,7 +6,7 @@
 #define LOCKGUARD_H
 
 #include "Mutex.h"
-
+namespace utils {
 class LockGuard {
     public:
         LockGuard(Mutex &);
@@ -19,4 +19,5 @@ class LockGuard {
         Mutex &mtx;
 };
 
+}
 #endif // LOCKGUARD_H

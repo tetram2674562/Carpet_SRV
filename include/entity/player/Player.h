@@ -21,7 +21,7 @@ namespace entity {
 
             virtual void update();
 
-            void kickPlayer(const std::basic_string<unsigned short> &);
+            void kickPlayer(const utils::UTF16String &);
 
             bool handleConnection();
 

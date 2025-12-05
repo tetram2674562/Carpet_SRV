@@ -19,7 +19,10 @@
 #include "utils/ConsoleUtils.h"
 #include "utils/LockGuard.h"
 
+#include "utils/UTF16String.h"
+
 using namespace std;
+using namespace utils;
 
 namespace network {
     Connection::Connection(const int client_FD,entity::Player& player): client_FD(client_FD), lastActivity(time(NULL)), player(&player) {
@@ -77,7 +80,7 @@ namespace network {
         this->player = &player;
         bool login = performLoginSequence();
         if (!login) {
-            disconnect(utils::ConsoleUtils::createUTF16String("Login failed"));
+            disconnect(utils::UTF16String("Login failed"));
         }
         return login;
     }
@@ -136,30 +139,30 @@ namespace network {
             }
 
             if (time(NULL) - lastActivity > 20) {
-                disconnect(utils::ConsoleUtils::createUTF16String("Timed out"));
+                disconnect(utils::UTF16String("Timed out"));
             }
         }
     }
 
 
-    basic_string<unsigned short> serializeServerInfo(const std::string &version,
+    utils::UTF16String serializeServerInfo(const std::string &version,
                                        const std::string &motd,
                                        const int currentPlayers,
                                        const int maxPlayers) {
-        std::vector<basic_string<unsigned short> > data;
-        data.push_back(utils::ConsoleUtils::createUTF16String("1"));
-        data.push_back(utils::ConsoleUtils::createUTF16String("51"));
-        data.push_back(utils::ConsoleUtils::createUTF16String(version));
-        data.push_back(utils::ConsoleUtils::createUTF16String(motd));
-        data.push_back(utils::ConsoleUtils::createUTF16String(utils::ConsoleUtils::toString(currentPlayers)));
-        data.push_back(utils::ConsoleUtils::createUTF16String(utils::ConsoleUtils::toString(maxPlayers)));
+        std::vector<utils::UTF16String> data;
+        data.push_back(utils::UTF16String("1"));
+        data.push_back(utils::UTF16String("51"));
+        data.push_back(utils::UTF16String(version));
+        data.push_back(utils::UTF16String(motd));
+        data.push_back(utils::UTF16String(utils::ConsoleUtils::toString(currentPlayers)));
+        data.push_back(utils::UTF16String(utils::ConsoleUtils::toString(maxPlayers)));
 
-        basic_string<unsigned short> joined;
-        joined.push_back(0x00A7);
+        utils::UTF16String joined;
+        joined.append(0x00A7);
 
         for (int i = 0; i < data.size(); i++) {
             joined += data[i];
-            joined.push_back(0x0000);
+            joined.append(0x0000);
         }
 
         return joined;
@@ -182,7 +185,7 @@ namespace network {
         if (pid == 0xFE) {
             packet::ServerPingPacket serverPing;
             serverPing.readData(buffer);
-            packet::KickPacket pingResponsePacket(serializeServerInfo("KV2", "A server running MCKV-2", 0, 20));
+            packet::KickPacket pingResponsePacket(serializeServerInfo("1.4.7", "A server running Carpet SRV", 0, 20));
             buffer.clearBuffer();
             pingResponsePacket.writeData(buffer);
             int fd_local;
@@ -324,7 +327,7 @@ namespace network {
         return this->client_FD != -1;
     }
 
-    void Connection::disconnect(const basic_string<unsigned short> &reason) {
+    void Connection::disconnect(const utils::UTF16String &reason) {
         packet::KickPacket* kickPacket = new packet::KickPacket(reason);
         addPacketToQueue(kickPacket);
         sendAndFlushQueue();
@@ -343,4 +346,18 @@ namespace network {
             utils::ConsoleUtils::getInstance().printMessage("Disconnected: (unknown)");
         }
     }
+
+    void Connection::handlePacket(packet::Buffer &buffer) {
+        // Read the packet id
+        switch (buffer.readByte()) {
+            //case 0xFE: this->handlePacket(packet::ServerPingPacket(buffer));
+            default: return;
+        };
+        // Then call the function again but with the packet
+    }
+
+    void Connection::handlePacket(packet::ServerPingPacket &packet) {
+
+    }
+
 }

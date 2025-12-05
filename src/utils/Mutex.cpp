@@ -3,6 +3,7 @@
 //
 #include "utils/Mutex.h"
 
+using namespace utils;
 Mutex::Mutex() {
 #ifdef _WIN32
     InitializeCriticalSection(&this->m_cs);

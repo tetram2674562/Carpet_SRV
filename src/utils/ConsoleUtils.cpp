@@ -34,11 +34,11 @@ namespace utils {
         return oss.str();
     }
 
-    std::basic_string<unsigned short> ConsoleUtils::createUTF16String(const std::string &msg) {
-        std::basic_string<unsigned short> us;
+    utils::UTF16String ConsoleUtils::createUTF16String(const std::string &msg) {
+        utils::UTF16String us;
 
         for (int i = 0; i < msg.length(); i++) {
-            us.push_back((unsigned short) (msg[i]));
+            us.append((unsigned short) msg[i]);
         }
         // now us contains the same text, widened
         return us;

@@ -5,6 +5,7 @@
 #include "utils/ThreadUtils.h"
 
 #include <unistd.h>
+using namespace utils;
 
 Thread::Thread() : handle() {
 }
