@@ -5,6 +5,7 @@
 #define CONSOLEUTILS_H
 
 #include "Mutex.h"
+#include "UTF16String.h"
 
 namespace utils {
     class ConsoleUtils {
@@ -14,7 +15,7 @@ namespace utils {
             void printerr(const std::string &);
             void getLine(std::string &);
             static std::string toString(int) ;
-            static std::basic_string<unsigned short> createUTF16String(const std::string&);
+            static utils::UTF16String createUTF16String(const std::string&);
         private:
             ConsoleUtils();
             Mutex consoleMutex;

@@ -19,7 +19,7 @@ namespace command {
             CommandHandler();
             bool running;
             static CommandHandler instance;
-            Thread command_listener_thread;
+            utils::Thread command_listener_thread;
     };
 }
 #endif //COMMANDHANDLER_H

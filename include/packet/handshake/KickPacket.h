@@ -6,15 +6,16 @@
 #ifndef KICKPACKET_H
 #define KICKPACKET_H
 #include "packet/Packet.h"
+#include "utils/UTF16String.h"
 
 namespace packet {
     class KickPacket :public Packet {
         public:
-            KickPacket(const std::basic_string<unsigned short> &);
+            KickPacket(const utils::UTF16String &);
             void writeData(Buffer &);
             void readData(Buffer &);
         private:
-            std::basic_string<unsigned short> reason;
+            utils::UTF16String reason;
     };
 }
 #endif //KICKPACKET_H

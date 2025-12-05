@@ -121,7 +121,7 @@ namespace packet {
         }
     }
 
-    void Buffer::writeUTF16String(const basic_string<unsigned short> &str) {
+    void Buffer::writeUTF16String(const utils::UTF16String &str) {
         writeShort(str.size());
 
         for (int i = 0; i < str.size(); i++) {

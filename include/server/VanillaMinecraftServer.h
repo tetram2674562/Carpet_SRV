@@ -27,7 +27,7 @@ namespace server {
             void shutdown();
             bool isRunning();
 
-            void requestKickPlayer(const entity::Player*, const std::basic_string<unsigned short> &);
+            void requestKickPlayer(const entity::Player*, const utils::UTF16String &);
 
             std::vector<entity::Player *> &getPlayers();
 
@@ -35,19 +35,21 @@ namespace server {
             int getServerSocket() const;
 
             void setServerSocket(int);
-            Mutex& getPlayersMutex();
+
+            utils::Mutex& getPlayersMutex();
         private:
             VanillaMinecraftServer();
-            Thread serverThread;
+
+            utils::Thread serverThread;
             crypto::KeyPair keypair;
             static VanillaMinecraftServer server;
             bool running;
             int server_socket;
             std::vector<entity::Player*> players;
             std::vector<int> usedIDs;
-            Mutex playersMutex;
+            utils::Mutex playersMutex;
             int maxPlayers;
-            Mutex serverStateMutex;
+            utils::Mutex serverStateMutex;
     };
 }
 #endif //VANILLAMINECRAFTSERVER_H

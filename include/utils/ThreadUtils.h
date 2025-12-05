@@ -13,7 +13,7 @@ typedef HANDLE ThreadHandle;
 typedef pthread_t ThreadHandle;
 #endif
 typedef void* (*ThreadFunction)(void*);
-
+namespace utils {
 class Thread {
     public:
         Thread();
@@ -26,4 +26,5 @@ class Thread {
         ThreadHandle handle;
 
 };
+}
 #endif //THREADUTILS_H

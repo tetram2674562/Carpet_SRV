@@ -13,7 +13,7 @@ namespace packet {
         public:
             ServerPingPacket(unsigned char);
             ServerPingPacket();
-
+            ServerPingPacket(Buffer &);
             void readData(Buffer &);
             void writeData(Buffer &);
             unsigned char getPing() const;

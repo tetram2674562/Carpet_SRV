@@ -11,6 +11,9 @@ namespace packet {
     ServerPingPacket::ServerPingPacket() : ping(-1) {
     }
 
+    ServerPingPacket::ServerPingPacket(Buffer& buffer) {
+        this->readData(buffer);
+    }
     void ServerPingPacket::writeData(Buffer &buffer) {
     }
 

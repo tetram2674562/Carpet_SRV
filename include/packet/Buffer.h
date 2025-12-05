@@ -7,6 +7,9 @@
 #define BUFFER_H
 #include <string>
 #include <vector>
+
+#include "utils/UTF16String.h"
+
 namespace packet {
     class Buffer {
         public:
@@ -31,7 +34,7 @@ namespace packet {
 
 
             void writeUTF16Char(unsigned short);
-            void writeUTF16String(const std::basic_string<unsigned short>&);
+            void writeUTF16String(const utils::UTF16String&);
 
             std::vector<unsigned char> readBytes();
             void writeBytes(const std::vector<unsigned char> &);

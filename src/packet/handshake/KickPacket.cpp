@@ -5,7 +5,7 @@
 #include "packet/handshake/KickPacket.h"
 using namespace std;
 namespace packet {
-    KickPacket::KickPacket(const basic_string<unsigned short> &reason) : reason(reason) {}
+    KickPacket::KickPacket(const utils::UTF16String &reason) : reason(reason) {}
 
     void KickPacket::writeData(Buffer &buffer) {
         buffer.writeByte(0xFF);

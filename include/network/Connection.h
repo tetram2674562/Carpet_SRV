@@ -12,6 +12,8 @@
 #include <packet/Packet.h>
 
 #include "crypto/AESCipher.h"
+#include "packet/handshake/ServerPingPacket.h"
+#include "utils/UTF16String.h"
 
 namespace entity {
     class Player;
@@ -31,7 +33,12 @@ namespace network {
             bool handleConnection(entity::Player &);
             void handlePackets();
             bool isAlive();
-            void disconnect(const std::basic_string<unsigned short> &);
+            void disconnect(const utils::UTF16String &);
+
+            void handlePacket(packet::Buffer &buffer);
+
+            void handlePacket(packet::ServerPingPacket &packet);
+
         private:
             // NO COPY
             Connection(const Connection&);           
@@ -41,9 +48,9 @@ namespace network {
             packet::Buffer dataBuffer;
 
             std::vector<packet::Packet*> queue;
-            Mutex queueMutex;
+            utils::Mutex queueMutex;
 
-            Mutex stateMutex;
+            utils::Mutex stateMutex;
             std::time_t lastActivity;
             crypto::AESCipher* cipher;
             entity::Player* player;
