@@ -75,7 +75,10 @@ void utils::UTF16String::append(int nbr) {
     this->length++;
 }
 
-utils::UTF16String utils::UTF16String::operator+(const UTF16String &string) {
+utils::UTF16String utils::UTF16String::operator+(const UTF16String &string) const {
+    UTF16String new_string(*this);
+    new_string += string;
+    return new_string;
 }
 
 unsigned short utils::UTF16String::operator[](unsigned int index) {
