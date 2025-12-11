@@ -30,6 +30,8 @@ class UTF16String {
 		std::ostream& display(std::ostream&) const;
 		void append(const UTF16String&);
         void append(int nbr);
+
+		utils::UTF16String operator+(const UTF16String &string) const;
 };
 
 std::ostream& operator << (std::ostream&, const UTF16String&);
