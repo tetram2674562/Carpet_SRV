@@ -21,11 +21,11 @@
 
 #include "utils/UTF16String.h"
 
+
 using namespace std;
 using namespace utils;
-
 namespace network {
-    Connection::Connection(const int client_FD,entity::Player& player): client_FD(client_FD), lastActivity(time(NULL)), player(&player) {
+    Connection::Connection(const int client_FD,entity::Player& player): client_FD(client_FD), lastActivity(time(NULL)), player(&player), queue(8) {
         this->cipher = NULL;
     }
 
@@ -35,14 +35,15 @@ namespace network {
 
     void Connection::addPacketToQueue(packet::Packet *packet) {
         LockGuard qlg(this->queueMutex);
-        this->queue.push_back(packet);
+        this->queue.add(packet);
     }
 
     void Connection::sendAndFlushQueue() {
-        std::vector<packet::Packet*> localQueue;
+        Queue<packet::Packet*> localQueue(8);
         {
             LockGuard qlg(this->queueMutex);
-            localQueue.swap(this->queue);
+            localQueue.addAll(this->queue);
+            while (!this->queue.estVide()) this->queue.remove();
         }
 
         for (size_t i = 0; i < localQueue.size(); ++i) {
@@ -50,7 +51,7 @@ namespace network {
             if (p == NULL) continue;
 
             packet::Buffer tmpBuf;
-            p->writeData(tmpBuf);
+            p->writeData(tmpBuf); // SISGEV
 
             int fd_local;
             crypto::AESCipher* cipher_local;
@@ -145,19 +146,19 @@ namespace network {
     }
 
 
-    utils::UTF16String serializeServerInfo(const std::string &version,
+    UTF16String serializeServerInfo(const std::string &version,
                                        const std::string &motd,
                                        const int currentPlayers,
                                        const int maxPlayers) {
-        std::vector<utils::UTF16String> data;
-        data.push_back(utils::UTF16String("1"));
-        data.push_back(utils::UTF16String("51"));
-        data.push_back(utils::UTF16String(version));
-        data.push_back(utils::UTF16String(motd));
-        data.push_back(utils::UTF16String(utils::ConsoleUtils::toString(currentPlayers)));
-        data.push_back(utils::UTF16String(utils::ConsoleUtils::toString(maxPlayers)));
+        std::vector<UTF16String> data;
+        data.push_back(UTF16String("1"));
+        data.push_back(UTF16String("51"));
+        data.push_back(UTF16String(version));
+        data.push_back(UTF16String(motd));
+        data.push_back(UTF16String(ConsoleUtils::toString(currentPlayers)));
+        data.push_back(UTF16String(ConsoleUtils::toString(maxPlayers)));
 
-        utils::UTF16String joined;
+        UTF16String joined;
         joined.append(0x00A7);
 
         for (int i = 0; i < data.size(); i++) {
@@ -359,5 +360,6 @@ namespace network {
     void Connection::handlePacket(packet::ServerPingPacket &packet) {
 
     }
+
 
 }
