@@ -13,6 +13,7 @@
 
 #include "crypto/AESCipher.h"
 #include "packet/handshake/ServerPingPacket.h"
+#include "utils/Queue.h"
 #include "utils/UTF16String.h"
 
 namespace entity {
@@ -47,7 +48,7 @@ namespace network {
             int client_FD;
             packet::Buffer dataBuffer;
 
-            std::vector<packet::Packet*> queue;
+            utils::Queue<packet::Packet*> queue;
             utils::Mutex queueMutex;
 
             utils::Mutex stateMutex;
