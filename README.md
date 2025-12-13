@@ -55,6 +55,16 @@ To start it just do the following
 - Adding comments to the code... Yeah this is unreadable
 - Refactoring the whole project (I like to do this kind of things)
 
+### Tests
+
+In order to execute tests that are in the project you will need to proceed as the following
+
+```
+make run_tests
+./run_tests
+```
+
+
 ### Contributing
 
 As of now, I just want to keep this as a little personnal project, to learn the C++.

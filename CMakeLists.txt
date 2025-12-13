@@ -10,3 +10,7 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.cpp)
 add_executable(CARPET_SRV ${SOURCES})
 
 target_link_libraries(CARPET_SRV PRIVATE OpenSSL::Crypto)
+
+
+add_executable(run_tests tests/test_main.cpp)
+target_include_directories(run_tests PRIVATE include)
