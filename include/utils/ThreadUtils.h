@@ -14,17 +14,17 @@ typedef pthread_t ThreadHandle;
 #endif
 typedef void* (*ThreadFunction)(void*);
 namespace utils {
-class Thread {
-    public:
-        Thread();
+class Thread
+{
+public:
+  Thread();
 
-        bool createThread(ThreadFunction, void*);
-        void joinThread() const;
-        void sleep(double);
+  bool createThread(ThreadFunction, void*);
+  void joinThread() const;
+  void sleep(double);
 
-    private:
-        ThreadHandle handle;
-
+private:
+  ThreadHandle handle;
 };
 }
-#endif //THREADUTILS_H
+#endif // THREADUTILS_H

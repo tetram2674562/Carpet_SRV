@@ -7,35 +7,35 @@
 
 #include "packet/Packet.h"
 
-
 namespace packet {
-    class ClientInfoPacket : public Packet {
-    public:
-        ClientInfoPacket();
-        void readData(Buffer &);
-        void writeData(Buffer &);
-        int getSize();
+class ClientInfoPacket : public Packet
+{
+public:
+  ClientInfoPacket();
+  void readData(Buffer&);
+  void writeData(Buffer&);
+  int getSize();
 
-        std::string getLanguage() const;
+  std::string getLanguage() const;
 
-        int getRenderDistance() const;
+  int getRenderDistance() const;
 
-        int getChatVisible() const;
+  int getChatVisible() const;
 
-        bool getChatColours() const;
+  bool getChatColours() const;
 
-        int getGameDifficulty() const;
+  int getGameDifficulty() const;
 
-        bool getShowCape() const;
+  bool getShowCape() const;
 
-    private:
-        std::string language;
-        int renderDistance;
-        int chatVisible;
-        bool chatColours;
-        int gameDifficulty;
-        bool showCape;
-    };
+private:
+  std::string language;
+  int renderDistance;
+  int chatVisible;
+  bool chatColours;
+  int gameDifficulty;
+  bool showCape;
+};
 }
 
-#endif //CLIENTINFOPACKET_H
+#endif // CLIENTINFOPACKET_H

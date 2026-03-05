@@ -4,31 +4,32 @@
 
 #ifndef KEYPAIR_H
 #define KEYPAIR_H
+#include <openssl/rsa.h>
 #include <string>
 #include <vector>
-#include <openssl/rsa.h>
 namespace crypto {
-    class KeyPair {
-    public:
-        KeyPair(int bits = 2048);
+class KeyPair
+{
+public:
+  KeyPair(int bits = 2048);
 
-        ~KeyPair();
+  ~KeyPair();
 
-        std::vector<unsigned char> getPrivateKeychars() const; 
-        std::vector<unsigned char> getPublicKeychars() const; 
+  std::vector<unsigned char> getPrivateKeychars() const;
+  std::vector<unsigned char> getPublicKeychars() const;
 
-        std::string getPrivateKeyPEM() const;
-        std::string getPublicKeyPEM() const;
+  std::string getPrivateKeyPEM() const;
+  std::string getPublicKeyPEM() const;
 
-        std::vector<unsigned char> decryptWithPrivateKey(const std::vector<unsigned char> &) const;
+  std::vector<unsigned char> decryptWithPrivateKey(
+    const std::vector<unsigned char>&) const;
 
-    private:
-        EVP_PKEY* keypair;
+private:
+  EVP_PKEY* keypair;
 
-        // NO COPY ALLOWED AS IT COULD MESS WITH THE SERVER.
-        KeyPair(const KeyPair&);
-        KeyPair& operator=(const KeyPair&);
-
-    };
+  // NO COPY ALLOWED AS IT COULD MESS WITH THE SERVER.
+  KeyPair(const KeyPair&);
+  KeyPair& operator=(const KeyPair&);
+};
 }
-#endif //KEYPAIR_H
+#endif // KEYPAIR_H

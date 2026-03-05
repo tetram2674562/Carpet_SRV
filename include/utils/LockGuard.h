@@ -7,16 +7,18 @@
 
 #include "Mutex.h"
 namespace utils {
-class LockGuard {
-    public:
-        LockGuard(Mutex &);
-        ~LockGuard();
-    private:
-        // NO COPY.
-        LockGuard(const LockGuard &);
-        LockGuard &operator=(const LockGuard &);
+class LockGuard
+{
+public:
+  LockGuard(Mutex&);
+  ~LockGuard();
 
-        Mutex &mtx;
+private:
+  // NO COPY.
+  LockGuard(const LockGuard&);
+  LockGuard& operator=(const LockGuard&);
+
+  Mutex& mtx;
 };
 
 }

@@ -4,9 +4,13 @@
 
 #include "server/ServerConfig.h"
 
-ServerConfig::ServerConfig() : maxPlayers(20){
+ServerConfig::ServerConfig()
+  : maxPlayers(20)
+{
 }
 
-int ServerConfig::getMaxPlayers() const {
-    return 20;
+int
+ServerConfig::getMaxPlayers() const
+{
+  return 20;
 }

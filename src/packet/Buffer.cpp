@@ -3,192 +3,234 @@
 //
 #include "packet/Buffer.h"
 
+#include <bits/stdint-uintn.h>
 #include <cstring>
 #include <iostream>
-#include <bits/stdint-uintn.h>
 #include <sys/types.h>
 
 #include "utils/ConsoleUtils.h"
 using namespace std;
 namespace packet {
 /** Read a char from the buffer
-     *
-     * @return A char
-     */
-    unsigned char Buffer::readByte(){
-        return this->data[this->index++];
+ *
+ * @return A char
+ */
+unsigned char
+Buffer::readByte()
+{
+  return this->data[this->index++];
+}
+
+/** Read a short from the buffer
+ *
+ * @return A short
+ */
+short
+Buffer::readShort()
+{
+  unsigned char part1 = this->data[this->index++];
+  unsigned char part2 = this->data[this->index++];
+  return (short)(part1 << 8 | part2);
+}
+
+/** Read a char from the buffer
+ *
+ * @return A char
+ */
+char
+Buffer::readChar()
+{
+  return (char)readShort();
+}
+
+/** Read a string from the buffer
+ *
+ * @return The string
+ */
+string
+Buffer::readString(int maxSize)
+{
+  const short stringLen = this->readShort();
+  string result;
+  if (stringLen > maxSize) {
+    utils::ConsoleUtils::getInstance().printerr(
+      "Received string length longer than maximum allowed (> " +
+      utils::ConsoleUtils::toString(maxSize) + ")");
+  } else if (stringLen < 0) {
+    utils::ConsoleUtils::getInstance().printerr(
+      "Received string length negative (< 0)");
+  } else {
+    for (uint i = 0; i < stringLen; i++) {
+      result += readChar();
     }
+  }
+  return result;
+}
 
-    /** Read a short from the buffer
-     *
-     * @return A short
-     */
-    short Buffer::readShort(){
-        unsigned char part1 = this->data[this->index++];
-        unsigned char part2 = this->data[this->index++];
-        return (short)(part1 << 8 | part2);
-    }
+double
+Buffer::readDouble()
+{
+  if (index + 8 > this->data.size()) {
+    utils::ConsoleUtils::getInstance().printerr(
+      "Not enough chars to read a double");
+    return 0.0;
+  }
 
-    /** Read a char from the buffer
-     *
-     * @return A char
-     */
-    char Buffer::readChar() {
-        return (char)readShort();
-    }
+  uint64_t raw = 0;
+  for (int i = 0; i < 8; ++i) {
+    raw = (raw << 8) | static_cast<uint8_t>(this->data[index + i]);
+  }
+  index += 8;
+  double value;
+  std::memcpy(&value, &raw, sizeof(double));
+  return value;
+}
 
-    /** Read a string from the buffer
-     *
-     * @return The string
-     */
-    string Buffer::readString(int maxSize) {
-        const short stringLen = this->readShort();
-        string result;
-        if (stringLen > maxSize)
-        {
-            utils::ConsoleUtils::getInstance().printerr("Received string length longer than maximum allowed (> "+utils::ConsoleUtils::toString(maxSize)+")");
-        }
-        else if (stringLen < 0) {
-            utils::ConsoleUtils::getInstance().printerr("Received string length negative (< 0)");
-        }
-        else {
-            for (uint i = 0; i < stringLen; i++) {
-                result += readChar();
-            }
-        }
-        return result;
-    }
+void
+Buffer::writeDouble(double number)
+{
+  uint64_t raw;
+  std::memcpy(&raw, &number, sizeof(double));
 
-    double Buffer::readDouble(){
-        if (index + 8 > this->data.size()) {
-            utils::ConsoleUtils::getInstance().printerr("Not enough chars to read a double");
-            return 0.0;
-        }
+  for (int i = 7; i >= 0; --i) {
+    this->data.push_back(static_cast<char>((raw >> (i * 8)) & 0xFF));
+  }
+}
 
-        uint64_t raw = 0;
-        for (int i = 0; i < 8; ++i) {
-            raw = (raw << 8) | static_cast<uint8_t>(this->data[index + i]);
-        }
-        index += 8;
-        double value;
-        std::memcpy(&value, &raw, sizeof(double));
-        return value;
-    }
+/** Write a char into the buffer
+ *
+ * @param number A char
+ */
+void
+Buffer::writeByte(const unsigned char byte)
+{
+  this->data.push_back(byte);
+}
 
-    void Buffer::writeDouble(double number) {
-        uint64_t raw;
-        std::memcpy(&raw, &number, sizeof(double));
+/** Write a short into the buffer
+ *
+ * @param number A short
+ */
+void
+Buffer::writeShort(const short number)
+{
+  this->data.push_back(static_cast<unsigned char>((number >> 8) & 0xFF));
+  this->data.push_back(static_cast<unsigned char>(number & 0xFF));
+}
 
-        for (int i = 7; i >= 0; --i) {
-            this->data.push_back(static_cast<char>((raw >> (i * 8)) & 0xFF));
-        }
-    }
+/** Write a char to the buffer
+ *
+ * @param c A char
+ */
+void
+Buffer::writeChar(char c)
+{
+  this->data.push_back(static_cast<char>(0x00)); // high char
+  this->data.push_back(static_cast<char>(c));    // low char
+}
 
-    /** Write a char into the buffer
-     *
-     * @param number A char
-     */
-    void Buffer::writeByte(const unsigned char byte) {
-        this->data.push_back(byte);
-    }
+/** Write a string to the buffer
+ *
+ * @param str A string
+ */
+void
+Buffer::writeString(const string& str)
+{
+  writeShort(static_cast<short>(str.size()));
+  for (int i = 0; i < str.size(); i++) {
+    writeChar(str[i]);
+  }
+}
 
-    /** Write a short into the buffer
-     *
-     * @param number A short
-     */
-    void Buffer::writeShort(const short number) {
-        this->data.push_back(static_cast<unsigned char>((number >> 8) & 0xFF));
-        this->data.push_back(static_cast<unsigned char>(number & 0xFF));
-    }
+void
+Buffer::writeUTF16String(const utils::UTF16String& str)
+{
+  writeShort(str.size());
 
-    /** Write a char to the buffer
-     *
-     * @param c A char
-     */
-    void Buffer::writeChar(char c) {
-        this->data.push_back(static_cast<char>(0x00)); // high char
-        this->data.push_back(static_cast<char>(c)); // low char
-    }
+  for (int i = 0; i < str.size(); i++) {
+    writeUTF16Char(str[i]);
+  }
+}
+void
+Buffer::writeUTF16Char(unsigned short ch)
+{
+  this->data.push_back(static_cast<unsigned char>(ch >> 8)); // high char
+  this->data.push_back(static_cast<unsigned char>(ch & 0xFF));
+}
 
-    /** Write a string to the buffer
-     *
-     * @param str A string
-     */
-    void Buffer::writeString(const string &str) {
-        writeShort(static_cast<short>(str.size()));
-        for (int i = 0; i < str.size(); i++) {
-            writeChar(str[i]);
-        }
-    }
+void
+Buffer::writeBytes(const vector<unsigned char>& bytes)
+{
+  // cout << chars.size() << endl;
+  writeShort(static_cast<short>(bytes.size()));
+  for (int i = 0; i < bytes.size(); i++) {
+    writeByte(bytes[i]);
+  }
+}
 
-    void Buffer::writeUTF16String(const utils::UTF16String &str) {
-        writeShort(str.size());
+vector<unsigned char>
+Buffer::readBytes()
+{
+  int16_t len = readShort();
+  if (len < 0) {
+    throw std::runtime_error("Negative char array length in packet.");
+  }
 
-        for (int i = 0; i < str.size(); i++) {
-            writeUTF16Char(str[i]);
-        }
-    }
-    void Buffer::writeUTF16Char(unsigned short ch) {
-        this->data.push_back(static_cast<unsigned char>(ch >> 8));     // high char
-        this->data.push_back(static_cast<unsigned char>(ch & 0xFF));
-    }
+  if (static_cast<size_t>(index) + len > data.size()) {
+    throw std::runtime_error(
+      "Not enough chars left in packet to read char array.");
+  }
 
-    void Buffer::writeBytes(const vector<unsigned char> &bytes) {
-        //cout << chars.size() << endl;
-        writeShort(static_cast<short>(bytes.size()));
-        for (int i = 0; i < bytes.size(); i++) {
-            writeByte(bytes[i]);
-        }
-    }
+  vector<unsigned char> result(len);
+  std::memcpy(result.data(), &data[index], len);
+  index += len;
+  return result;
+}
 
-    vector<unsigned char> Buffer::readBytes() {
-        int16_t len = readShort();
-        if (len < 0) {
-            throw std::runtime_error("Negative char array length in packet.");
-        }
+void
+Buffer::writeInt(const int number)
+{
+  data.push_back((char)((number >> 24) & 0xFF));
+  data.push_back((char)((number >> 16) & 0xFF));
+  data.push_back((char)((number >> 8) & 0xFF));
+  data.push_back((char)(number & 0xFF));
+}
 
-        if (static_cast<size_t>(index) + len > data.size()) {
-            throw std::runtime_error("Not enough chars left in packet to read char array.");
-        }
+Buffer::Buffer(std::vector<unsigned char>& bytesArray)
+  : index(0)
+  , data(bytesArray)
+{
+}
 
-        vector<unsigned char> result(len);
-        std::memcpy(result.data(), &data[index], len);
-        index += len;
-        return result;
-    }
+Buffer::Buffer()
+  : index(0)
+{
+}
 
-    void Buffer::writeInt(const int number) {
-        data.push_back((char)((number >> 24) & 0xFF));
-        data.push_back((char)((number >> 16) & 0xFF));
-        data.push_back((char)((number >>  8) & 0xFF));
-        data.push_back((char)(number & 0xFF));
-    }
+void
+Buffer::clearBuffer()
+{
+  this->index = 0;
+  this->data.clear();
+}
 
-    Buffer::Buffer(std::vector<unsigned char>& bytesArray) : index(0), data(bytesArray) {
-    }
+vector<unsigned char>&
+Buffer::getDataBuffer()
+{
+  return this->data;
+}
 
-    Buffer::Buffer() : index(0){
-    }
+int
+Buffer::readInt()
+{
+  return (readByte() << 24) + (readByte() << 16) + (readByte() << 8) +
+         readByte();
+}
 
-    void Buffer::clearBuffer() {
-        this->index = 0;
-        this->data.clear();
-    }
-
-    vector<unsigned char>& Buffer::getDataBuffer() {
-        return this->data;
-    }
-
-
-    int Buffer::readInt() {
-        return (readByte() << 24) + (readByte() << 16) + (readByte() << 8) + readByte();
-    }
-
-
-    bool Buffer::readBool() {
-        return readByte() != 0;
-    }
-
-
+bool
+Buffer::readBool()
+{
+  return readByte() != 0;
+}
 
 }

@@ -6,17 +6,18 @@
 #include "world/Location.h"
 
 namespace entity {
-    class Entity {
-        public:
-            Entity();
-            virtual ~Entity() {};
-            virtual void update() = 0;
-            virtual world::Location getLocation() const;
-            virtual void setPosition(double, double, double);
+class Entity
+{
+public:
+  Entity();
+  virtual ~Entity(){};
+  virtual void update() = 0;
+  virtual world::Location getLocation() const;
+  virtual void setPosition(double, double, double);
 
-        protected:
-            world::Location location;
-    };
+protected:
+  world::Location location;
+};
 
 }
-#endif //ENTITY_H
+#endif // ENTITY_H

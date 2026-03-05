@@ -4,29 +4,41 @@
 
 #include <cstring>
 #include <iostream>
-#include <string>
-#include <vector>
+#include <map>
 #include <netinet/in.h>
 #include <packet/Packet.h>
 #include <packet/handshake/ServerPingPacket.h>
-#include <map>
+#include <string>
+#include <vector>
 using namespace std;
 namespace packet {
 
-    Packet::Packet() : packetID(-1), size(0) {
-    }
+Packet::Packet()
+  : packetID(-1)
+  , size(0)
+{
+}
 
-    Packet::~Packet() {
-    }
+Packet::~Packet() {}
 
-    int Packet::getSize() {
-        return -1;
-    }
+int
+Packet::getSize()
+{
+  return -1;
+}
 
-    int Packet::getPacketID() {
-        return this->packetID;
-    }
-    void Packet::readData(Buffer &buffer) {}
-    void Packet::writeData(Buffer &buffer) {}
+int
+Packet::getPacketID()
+{
+  return this->packetID;
+}
+void
+Packet::readData(Buffer& buffer)
+{
+}
+void
+Packet::writeData(Buffer& buffer)
+{
+}
 
 }

@@ -7,31 +7,39 @@
 #include <unistd.h>
 using namespace utils;
 
-Thread::Thread() : handle() {
+Thread::Thread()
+  : handle()
+{
 }
 
-bool Thread::createThread(ThreadFunction func, void *arg) {
+bool
+Thread::createThread(ThreadFunction func, void* arg)
+{
 #ifdef _WIN32
-    *handle = CreateThread(0, 0, (LPTHREAD_START_ROUTINE) func, arg, 0, 0);
-    return *handle != 0;
+  *handle = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)func, arg, 0, 0);
+  return *handle != 0;
 #else
-    return pthread_create(&handle, 0, func, arg) == 0;
+  return pthread_create(&handle, 0, func, arg) == 0;
 #endif
 }
 
-void Thread::joinThread() const {
+void
+Thread::joinThread() const
+{
 #ifdef _WIN32
-    WaitForSingleObject(handle, INFINITE);
-    CloseHandle(handle);
+  WaitForSingleObject(handle, INFINITE);
+  CloseHandle(handle);
 #else
-    pthread_join(handle, 0);
+  pthread_join(handle, 0);
 #endif
 }
 
-void Thread::sleep(double time2sleep) {
+void
+Thread::sleep(double time2sleep)
+{
 #ifdef _WIN32
-    Sleep(time2sleep);
+  Sleep(time2sleep);
 #else
-    usleep(time2sleep * 1000);
+  usleep(time2sleep * 1000);
 #endif
 }

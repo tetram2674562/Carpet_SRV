@@ -4,12 +4,11 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
-
 #include <ctime>
 
 #include "utils/Mutex.h"
-#include <vector>
 #include <packet/Packet.h>
+#include <vector>
 
 #include "crypto/AESCipher.h"
 #include "packet/handshake/ServerPingPacket.h"
@@ -17,47 +16,48 @@
 #include "utils/UTF16String.h"
 
 namespace entity {
-    class Player;
+class Player;
 }
 
 namespace network {
-    class Connection {
-        public:
-            Connection(int, entity::Player&);
+class Connection
+{
+public:
+  Connection(int, entity::Player&);
 
-            ~Connection();
+  ~Connection();
 
-            void addPacketToQueue(packet::Packet *);
+  void addPacketToQueue(packet::Packet*);
 
-            void sendAndFlushQueue();
+  void sendAndFlushQueue();
 
-            bool handleConnection(entity::Player &);
-            void handlePackets();
-            bool isAlive();
-            void disconnect(const utils::UTF16String &);
+  bool handleConnection(entity::Player&);
+  void handlePackets();
+  bool isAlive();
+  void disconnect(const utils::UTF16String&);
 
-            void handlePacket(packet::Buffer &buffer);
+  void handlePacket(packet::Buffer& buffer);
 
-            void handlePacket(packet::ServerPingPacket &packet);
+  void handlePacket(packet::ServerPingPacket& packet);
 
-        private:
-            // NO COPY
-            Connection(const Connection&);           
-            Connection& operator=(const Connection&);
+private:
+  // NO COPY
+  Connection(const Connection&);
+  Connection& operator=(const Connection&);
 
-            int client_FD;
-            packet::Buffer dataBuffer;
+  int client_FD;
+  packet::Buffer dataBuffer;
 
-            utils::Queue<packet::Packet*> queue;
-            utils::Mutex queueMutex;
+  utils::Queue<packet::Packet*> queue;
+  utils::Mutex queueMutex;
 
-            utils::Mutex stateMutex;
-            std::time_t lastActivity;
-            crypto::AESCipher* cipher;
-            entity::Player* player;
+  utils::Mutex stateMutex;
+  std::time_t lastActivity;
+  crypto::AESCipher* cipher;
+  entity::Player* player;
 
-            bool performLoginSequence();
-            bool recvPacket(std::vector<unsigned char> &);
-    };
+  bool performLoginSequence();
+  bool recvPacket(std::vector<unsigned char>&);
+};
 }
-#endif //CONNECTION_H
+#endif // CONNECTION_H

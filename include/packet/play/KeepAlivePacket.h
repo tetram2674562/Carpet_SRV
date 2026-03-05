@@ -6,12 +6,12 @@
 #define KEEPALIVEPACKET_H
 #include "packet/Packet.h"
 
-
 namespace packet {
-    class KeepAlivePacket: public Packet {
-        public:
-            void writeData(Buffer &);
-            void readData(Buffer &);
-    };
+class KeepAlivePacket : public Packet
+{
+public:
+  void writeData(Buffer&);
+  void readData(Buffer&);
+};
 }
-#endif //KEEPALIVEPACKET_H
+#endif // KEEPALIVEPACKET_H

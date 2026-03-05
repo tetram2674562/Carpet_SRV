@@ -6,20 +6,21 @@
 #define LOCATION_H
 
 namespace world {
-    class Location {
-        public:
-            Location(double = 0., double = 0., double = 0.);
-            double getX() const;
-            double getY() const;
-            double getZ() const;
-            void add(double,double,double);
+class Location
+{
+public:
+  Location(double = 0., double = 0., double = 0.);
+  double getX() const;
+  double getY() const;
+  double getZ() const;
+  void add(double, double, double);
 
-            void set(double, double, double);
+  void set(double, double, double);
 
-        private:
-            double x;
-            double y;
-            double z;
-    };
+private:
+  double x;
+  double y;
+  double z;
+};
 }
-#endif //LOCATION_H
+#endif // LOCATION_H

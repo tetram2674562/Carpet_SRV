@@ -6,20 +6,20 @@
 #include "utils/ThreadUtils.h"
 
 namespace command {
-    class CommandHandler {
-        public:
-            bool isRunning() const;
-            static void *CommandListener(void *);
-            static void initCommandHandler();
-            void shutdown();
-            static CommandHandler& getInstance();
+class CommandHandler
+{
+public:
+  bool isRunning() const;
+  static void* CommandListener(void*);
+  static void initCommandHandler();
+  void shutdown();
+  static CommandHandler& getInstance();
 
-
-        private:
-            CommandHandler();
-            bool running;
-            static CommandHandler instance;
-            utils::Thread command_listener_thread;
-    };
+private:
+  CommandHandler();
+  bool running;
+  static CommandHandler instance;
+  utils::Thread command_listener_thread;
+};
 }
-#endif //COMMANDHANDLER_H
+#endif // COMMANDHANDLER_H

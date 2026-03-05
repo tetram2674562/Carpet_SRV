@@ -10,48 +10,49 @@
 #include "network/Connection.h"
 
 namespace network {
-    class Connection;
+class Connection;
 }
 
 namespace entity {
-    class Player : public Entity {
-        public:
+class Player : public Entity
+{
+public:
+  Player(int);
 
-            Player(int);
+  virtual void update();
 
-            virtual void update();
+  void kickPlayer(const utils::UTF16String&);
 
-            void kickPlayer(const utils::UTF16String &);
+  bool handleConnection();
 
-            bool handleConnection();
+  std::string getName() const;
 
-            std::string getName() const;
+  network::Connection& getConnection();
 
-            network::Connection& getConnection();
+  void setUsername(const std::string&);
 
-            void setUsername(const std::string &);
+  std::string getLanguage() const;
 
-            std::string getLanguage() const;
+  void setLanguage(const std::string&);
 
-            void setLanguage(const std::string &);
+  int getRenderDistance() const;
 
-            int getRenderDistance() const;
+  void setRenderDistance(int);
 
-            void setRenderDistance(int );
+  bool getShowCape() const;
 
-            bool getShowCape() const;
+  void setShowCape(bool);
 
-            void setShowCape(bool);
+  virtual void setPosition(double, double, double);
 
-            virtual void setPosition(double, double, double);
+  virtual world::Location getLocation() const;
 
-            virtual world::Location getLocation() const;
-        private:
-            std::string name;
-            network::Connection connection;
-            std::string language;
-            int renderDistance;
-            bool showCape;
-    };
+private:
+  std::string name;
+  network::Connection connection;
+  std::string language;
+  int renderDistance;
+  bool showCape;
+};
 }
-#endif //PLAYER_H
+#endif // PLAYER_H

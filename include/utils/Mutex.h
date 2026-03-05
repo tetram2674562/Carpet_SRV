@@ -6,23 +6,24 @@
 #define MUTEX_H
 #include <pthread.h>
 namespace utils {
-class Mutex {
+class Mutex
+{
 public:
-    Mutex();
+  Mutex();
 
-    ~Mutex();
+  ~Mutex();
 
-    void lock();
+  void lock();
 
-    void unlock();
+  void unlock();
 
 private:
 #ifdef _WIN32
-    CRITICAL_SECTION m_cs;
+  CRITICAL_SECTION m_cs;
 #else
-    pthread_mutex_t m_mutex;
+  pthread_mutex_t m_mutex;
 #endif
 };
 
 }
-#endif //MUTEX_H
+#endif // MUTEX_H
