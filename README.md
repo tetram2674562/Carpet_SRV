@@ -31,10 +31,14 @@ Then enter the directory
 cd Carpet_srv
 ```
 
+Create a build directory and enter it 
+```
+mkdir build && cd build
+```
 Then generate the makefile
 
 ```
-cmake .
+cmake ..
 ```
 
 End up with this command to compile
