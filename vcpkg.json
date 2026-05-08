@@ -1,12 +1,11 @@
 {
-  "name": "carpet-srv",
-  "version": "0.0.1",
-  "dependencies": [
-    {
-      "name": "zlib"
-    },
-    {
-      "name": "openssl"
-    }
-  ]
+  "name" : "carpet-srv",
+  "version" : "0.0.1",
+  "dependencies" : [ {
+    "name" : "zlib"
+  }, {
+    "name" : "openssl"
+  }, {
+    "name" : "asio"
+  } ]
 }

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.27)
 project(CARPET_SRV)
 
-set(CMAKE_CXX_STANDARD 98)
+set(CMAKE_CXX_STANDARD 20)
 find_package(OpenSSL REQUIRED)
 find_package(ZLIB REQUIRED)
 include_directories("include")

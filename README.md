@@ -17,6 +17,10 @@ This is a little minecraft server 1.4.7 written in C++ 98. It's mainly made for 
 
 - Cmake
 - Openssl 3.0 minimum
+- Zlib
+- Asio
+
+( I recommend you using vcpkg to install dependencies !)
 
 ### Installing
 
@@ -77,7 +81,7 @@ However when the structure will be better (as of now It's absolute garbage), I w
 This project follow a few rules : 
 
 - No external library other than openssl (maybe libnoise ? I'll try to take a look, but I want to keep it with less dependancies as possible) 
-- C++98 is the standard. This won't change.
 
+I had for first idea to use Cpp 98 but I stepped against cross platform compilation problems.
 
 *I hate data races and memory leak >:(*
