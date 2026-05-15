@@ -34,18 +34,10 @@ ConsoleUtils::getLine(string& variable)
   inputMutex.unlock();
 }
 
-std::string
-ConsoleUtils::toString(const int num)
-{
-  std::ostringstream oss;
-  oss << num;
-  return oss.str();
-}
-
-utils::UTF16String
+UTF16String
 ConsoleUtils::createUTF16String(const std::string& msg)
 {
-  utils::UTF16String us;
+  UTF16String us;
 
   for (int i = 0; i < msg.length(); i++) {
     us.append((unsigned short)msg[i]);

@@ -6,8 +6,8 @@
 using namespace std;
 
 namespace entity {
-Player::Player(const int clientSocket)
-  : connection(clientSocket, *this)
+Player::Player(const network::Connection::pointer& conn)
+  : connection(conn)
   , renderDistance(20)
   , showCape(true)
 {
@@ -22,14 +22,14 @@ entity::Player::update()
 void
 Player::kickPlayer(const utils::UTF16String& reason)
 {
-  connection.disconnect(reason);
+  connection->disconnect(reason);
 }
 
-bool
+void
 Player::handleConnection()
 {
   // Pass the client fd
-  return connection.handleConnection(*this);
+  connection->handleConnection(*this);
 }
 
 void
@@ -95,7 +95,7 @@ Player::getName() const
 network::Connection&
 Player::getConnection()
 {
-  return this->connection;
+  return *this->connection;
 }
 
 }

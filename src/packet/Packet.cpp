@@ -3,13 +3,7 @@
 //
 
 #include <cstring>
-#include <iostream>
-#include <map>
-#include <netinet/in.h>
 #include <packet/Packet.h>
-#include <packet/handshake/ServerPingPacket.h>
-#include <string>
-#include <vector>
 using namespace std;
 namespace packet {
 

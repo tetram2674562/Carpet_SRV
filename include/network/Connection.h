@@ -6,14 +6,13 @@
 
 #include <ctime>
 
-#include "utils/Mutex.h"
 #include <packet/Packet.h>
 #include <vector>
-
+#include <map>
 #include "crypto/AESCipher.h"
-#include "packet/handshake/ServerPingPacket.h"
-#include "utils/Queue.h"
 #include "utils/UTF16String.h"
+
+#include <asio.hpp>
 
 namespace entity {
 class Player;
@@ -21,43 +20,86 @@ class Player;
 
 namespace network {
 class Connection
+  : public std::enable_shared_from_this<Connection>
 {
 public:
-  Connection(int, entity::Player&);
 
-  ~Connection();
+  typedef std::shared_ptr<Connection> pointer;
 
+  static pointer create(asio::io_context &io_context);
+
+  // NO COPY
+  Connection(const Connection&) = delete;
+  Connection& operator=(const Connection&) = delete;
+
+  /**
+   * \brief Allow you to add packet to be send to the connection
+   */
   void addPacketToQueue(packet::Packet*);
 
-  void sendAndFlushQueue();
+  void handleConnection(entity::Player&);
 
-  bool handleConnection(entity::Player&);
-  void handlePackets();
-  bool isAlive();
+  bool isAlive() const;
   void disconnect(const utils::UTF16String&);
 
-  void handlePacket(packet::Buffer& buffer);
+  // Read tcp
+  void start_read();
+  void handle_read(const std::error_code& error, std::size_t);
 
-  void handlePacket(packet::ServerPingPacket& packet);
+  // Write tcp
+  void start_write();
+  void handle_write(const std::error_code& error, std::size_t);
+  asio::ip::tcp::socket& socket();
+
+  enum Status
+  {
+    HANDSHAKE,
+    LOGIN,
+    PLAY
+  };
 
 private:
-  // NO COPY
-  Connection(const Connection&);
-  Connection& operator=(const Connection&);
+  Connection(asio::io_context&);
 
-  int client_FD;
-  packet::Buffer dataBuffer;
-
-  utils::Queue<packet::Packet*> queue;
-  utils::Mutex queueMutex;
-
-  utils::Mutex stateMutex;
-  std::time_t lastActivity;
+  // Socket
+  asio::ip::tcp::socket socket_;
+  // Buffers
+  packet::Buffer writeBuffer;
+  packet::Buffer readBuffer;
+  // Cryptographic cipher AES128
   crypto::AESCipher* cipher;
+
+  // Packet queue
+  std::vector<packet::Packet*> queue;
+  std::mutex queueMutex;
+
+  std::mutex stateMutex;
+  std::time_t lastActivity;
   entity::Player* player;
 
-  bool performLoginSequence();
-  bool recvPacket(std::vector<unsigned char>&);
+  // Verify token for crypto
+  std::vector<unsigned char> verifyToken;
+
+  // Status of the connection
+  Status status;
+
+
+
+  // Handlers
+  void handleServerPingPacket(); // 0xFE
+  void handleHandshake(); // 0x02
+  void handleSharedKeyPacket(); // 0xFC
+  void handleClientInfo(); // 0xCC
+  void handleKeepAlive(); // 0x00
+  void handlePositionPacket(); // 0x0B
+
+
+
+
+  typedef void (Connection::*PacketHandler)();
+
+  static const std::map<unsigned char, PacketHandler> PACKETS_HANDLERS;
+  void performLoginSequence();
 };
 }
 #endif // CONNECTION_H

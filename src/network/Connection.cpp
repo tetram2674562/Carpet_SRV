@@ -1,11 +1,9 @@
 //
 // Created by tetram26 on 31/07/25.
 //
-#include <iostream>
-#include <network/Connection.h>
-#include <sys/socket.h>
-#include <unistd.h>
+#include <map>
 
+#include "network/Connection.h"
 #include "entity/player/Player.h"
 #include "packet/handshake/ClientProtocolPacket.h"
 #include "packet/handshake/KickPacket.h"
@@ -17,154 +15,52 @@
 #include "packet/play/player/ClientInfoPacket.h"
 #include "packet/play/player/PlayerPositionPacket.h"
 #include "utils/ConsoleUtils.h"
-#include "utils/LockGuard.h"
+
 
 #include "utils/UTF16String.h"
 
 using namespace std;
 using namespace utils;
+
 namespace network {
-Connection::Connection(const int client_FD, entity::Player& player)
-  : client_FD(client_FD)
-  , lastActivity(time(NULL))
-  , player(&player)
-  , queue(8)
+
+const std::map<unsigned char, Connection::PacketHandler>
+  Connection::PACKETS_HANDLERS{
+    {0xFE,&Connection::handleServerPingPacket},
+    {0x02,&Connection::handleHandshake},
+    {0xFC,&Connection::handleSharedKeyPacket},
+    {0xCC,&Connection::handleClientInfo},
+    {0x00,&Connection::handleKeepAlive},
+    {0x0B,&Connection::handlePositionPacket},
+  };
+
+Connection::Connection(asio::io_context& io_context)
+  : socket_(io_context)
+  , queue(20)
+  , lastActivity(time(nullptr))
+  , player(nullptr)
+  , status(HANDSHAKE)
 {
-  this->cipher = NULL;
+  this->cipher = nullptr;
 }
 
-Connection::~Connection()
+Connection::pointer
+Connection::create(asio::io_context& io_context)
 {
-  if (client_FD != -1)
-    close(client_FD);
+  return pointer(new Connection(io_context));
 }
 
 void
 Connection::addPacketToQueue(packet::Packet* packet)
 {
-  LockGuard qlg(this->queueMutex);
-  this->queue.add(packet);
+  lock_guard qlg(this->queueMutex);
+  this->queue.push_back(packet);
 }
-
 void
-Connection::sendAndFlushQueue()
-{
-  Queue<packet::Packet*> localQueue(8);
-  {
-    LockGuard qlg(this->queueMutex);
-    localQueue.addAll(this->queue);
-    while (!this->queue.estVide())
-      this->queue.remove();
-  }
-
-  for (size_t i = 0; i < localQueue.size(); ++i) {
-    packet::Packet* p = localQueue[i];
-    if (p == NULL)
-      continue;
-
-    packet::Buffer tmpBuf;
-    p->writeData(tmpBuf); // SISGEV
-
-    int fd_local;
-    crypto::AESCipher* cipher_local;
-    {
-      LockGuard sl(this->stateMutex);
-      fd_local = this->client_FD;
-      cipher_local = this->cipher;
-    }
-
-    if (fd_local != -1) {
-      if (cipher_local != NULL) {
-        vector<unsigned char> encryptedData =
-          cipher_local->encrypt(tmpBuf.getDataBuffer());
-        send(fd_local, encryptedData.data(), encryptedData.size(), 0);
-      } else {
-        const std::vector<unsigned char>& db = tmpBuf.getDataBuffer();
-        if (!db.empty()) {
-          send(fd_local, db.data(), db.size(), 0);
-        }
-      }
-    }
-
-    delete p;
-  }
-}
-
-bool
 Connection::handleConnection(entity::Player& player)
 {
   this->player = &player;
-  bool login = performLoginSequence();
-  if (!login) {
-    disconnect(utils::UTF16String("Login failed"));
-  }
-  return login;
-}
-
-void
-Connection::handlePackets()
-{
-  vector<unsigned char> rawData;
-  vector<unsigned char> decryptedData;
-  rawData.clear();
-  decryptedData.clear();
-  if (recvPacket(rawData)) {
-    if (!rawData.empty()) {
-      // Avoid data race (I hate you data race)
-      crypto::AESCipher* cipher_local;
-      entity::Player* player_local;
-      {
-        LockGuard sl(this->stateMutex);
-        cipher_local = this->cipher;
-        player_local = this->player;
-      }
-      if (cipher_local == NULL)
-        return;
-      decryptedData = cipher_local->decrypt(rawData);
-      packet::Buffer packetBuffer = packet::Buffer(decryptedData);
-      unsigned char pid = packetBuffer.readByte();
-      switch (pid) {
-        // client info
-        case 0xCC: {
-          packet::ClientInfoPacket infoPacket;
-          infoPacket.readData(packetBuffer);
-          if (player_local) {
-            player_local->setLanguage(infoPacket.getLanguage());
-            player_local->setShowCape(infoPacket.getShowCape());
-            player_local->setRenderDistance(infoPacket.getRenderDistance());
-          }
-          break;
-        }
-        case 0x00: {
-          packet::KeepAlivePacket* keepAlivePacket =
-            new packet::KeepAlivePacket();
-          addPacketToQueue(keepAlivePacket);
-          break;
-        }
-        case 0x0B: {
-          // player position packet
-          packet::PlayerPositionPacket positionPacket;
-          positionPacket.readData(packetBuffer);
-          if (player_local) {
-            player_local->setPosition(positionPacket.getX(),
-                                      positionPacket.getY(),
-                                      positionPacket.getZ());
-          }
-          break;
-        }
-        default:
-          utils::ConsoleUtils::getInstance().printerr(
-            "Unknown packet ID: " + utils::ConsoleUtils::toString(pid));
-          break;
-      }
-
-      sendAndFlushQueue();
-    }
-
-    if (time(NULL) - lastActivity > 20) {
-      disconnect(utils::UTF16String("Timed out"));
-    }
-  }
+  performLoginSequence();
 }
 
 UTF16String
@@ -174,258 +70,218 @@ serializeServerInfo(const std::string& version,
                     const int maxPlayers)
 {
   std::vector<UTF16String> data;
-  data.push_back(UTF16String("1"));
-  data.push_back(UTF16String("51"));
-  data.push_back(UTF16String(version));
-  data.push_back(UTF16String(motd));
-  data.push_back(UTF16String(ConsoleUtils::toString(currentPlayers)));
-  data.push_back(UTF16String(ConsoleUtils::toString(maxPlayers)));
+  data.emplace_back("1");
+  data.emplace_back("51");
+  data.emplace_back(version);
+  data.emplace_back(motd);
+  data.emplace_back(std::to_string(currentPlayers));
+  data.emplace_back(to_string(maxPlayers));
 
   UTF16String joined;
   joined.append(0x00A7);
 
-  for (int i = 0; i < data.size(); i++) {
-    joined += data[i];
+  for (const UTF16String& i : data) {
+    joined += i;
     joined.append(0x0000);
   }
 
   return joined;
 }
 
-bool
-network::Connection::performLoginSequence()
+void
+Connection::performLoginSequence()
 {
-
-  // 1. Receive handshake (0x02)
-  vector<unsigned char> rawData;
-  if (!recvPacket(rawData)) {
-    utils::ConsoleUtils::getInstance().printerr("Failed to receive handshake.");
-    return false;
-  }
-
-  // Current packet id
-  packet::Buffer buffer(rawData);
-  unsigned char pid = buffer.readByte();
-
-  // If the packet id is 254 -> server ping
-  if (pid == 0xFE) {
-    packet::ServerPingPacket serverPing;
-    serverPing.readData(buffer);
-    packet::KickPacket pingResponsePacket(
-      serializeServerInfo("1.4.7", "A server running Carpet SRV", 0, 20));
-    buffer.clearBuffer();
-    pingResponsePacket.writeData(buffer);
-    int fd_local;
-    {
-      LockGuard sl(this->stateMutex);
-      fd_local = this->client_FD;
-    }
-    send(fd_local,
-         buffer.getDataBuffer().data(),
-         buffer.getDataBuffer().size(),
-         0);
-
-    return false;
-  }
-
-  if (pid != 0x02) {
-    utils::ConsoleUtils::getInstance().printerr(
-      "Expected handshake (0x02), got: " + utils::ConsoleUtils::toString(pid));
-    return false;
-  }
-
-  packet::ClientProtocolPacket clientProtocolPacket;
-  clientProtocolPacket.readData(buffer);
-  if (clientProtocolPacket.getProtocolVersion() != 51) {
-    utils::ConsoleUtils::getInstance().printerr(
-      "Client protocol version doesn't fit 1.4.7...");
-    return false;
-  }
-
-  // set username under state lock
-  {
-    LockGuard sl(this->stateMutex);
-    if (this->player)
-      this->player->setUsername(clientProtocolPacket.getUsername());
-  }
-  utils::ConsoleUtils::getInstance().printMessage(
-    "[Server] Got connection from " + clientProtocolPacket.getServerHost() +
-    " with username \\\"" + this->player->getName() + "\\\"");
-
-  // 2. Send encryption key request (0xFD)
-  packet::ServerAuthDataPacket serverAuthDataPacket;
-  buffer.clearBuffer();
-  serverAuthDataPacket.writeData(buffer);
-  {
-    LockGuard sl(this->stateMutex);
-    send(this->client_FD,
-         buffer.getDataBuffer().data(),
-         buffer.getDataBuffer().size(),
-         0);
-  }
-
-  // 3. Receive encrypted shared key (0xFC)
-  rawData.clear();
-  if (!recvPacket(rawData)) {
-    utils::ConsoleUtils::getInstance().printerr(
-      "Failed to receive encryption response packet.");
-    return false;
-  }
-
-  buffer = packet::Buffer(rawData);
-  pid = buffer.readByte();
-  if (static_cast<int>(pid) != 0xFC) {
-    utils::ConsoleUtils::getInstance().printerr(
-      "Expected shared key packet (0xFC), got: " +
-      utils::ConsoleUtils::toString(pid));
-    return false;
-  }
-
-  packet::SharedKeyPacket sharedKeyPacket = packet::SharedKeyPacket();
-  // 4. Decrypt shared key and verify
-  sharedKeyPacket.readData(buffer);
-  if (serverAuthDataPacket.getVerifyToken() !=
-      sharedKeyPacket.getVerifyToken()) {
-    utils::ConsoleUtils::getInstance().printMessage(
-      "Excepted an exact same verify token");
-    return false;
-  }
-
-  // cout << "5. Set up AES cipher" << endl;
-  {
-    LockGuard sl(this->stateMutex);
-    this->cipher = new crypto::AESCipher(sharedKeyPacket.getSharedSecret());
-  }
-  // 6. Send encryption response
-  buffer.clearBuffer();
-  sharedKeyPacket.writeData(buffer);
-  {
-    LockGuard sl(this->stateMutex);
-    send(this->client_FD,
-         buffer.getDataBuffer().data(),
-         buffer.getDataBuffer().size(),
-         0);
-  }
-
-  // 7. Send login success (0x01 or server auth data)
-  buffer.clearBuffer();
-  packet::LoginPacket loginPacket;
-  loginPacket.writeData(buffer);
-  vector<unsigned char> packetData;
-  {
-    LockGuard sl(this->stateMutex);
-    packetData = this->cipher->encrypt(buffer.getDataBuffer());
-    if (!packetData.empty())
-      send(this->client_FD, packetData.data(), packetData.size(), 0);
-  }
-
-  // 8. Ready to PLAY.
-  return true;
-}
-
-int
-getExpectedPacketSize(uint8_t packetId)
-{
-  // TODO Implement this.
-  switch (packetId) {
-    case 0x02:
-      return -1;
-    case 0xFD:
-      return -1;
-    case 0xFC:
-      return -1;
-    case 0x01:
-      return 1;
-    default:
-      return -1;
-  }
+  start_read();
+  start_write();
 }
 
 bool
-network::Connection::recvPacket(std::vector<unsigned char>& outBuffer)
+Connection::isAlive() const
 {
-  outBuffer.clear();
-
-  int fd_local;
-  {
-    LockGuard sl(this->stateMutex);
-    fd_local = this->client_FD;
-  }
-  if (fd_local == -1)
-    return false;
-
-  char packetId;
-  ssize_t charsRead = recv(fd_local, &packetId, 1, MSG_WAITALL);
-  if (charsRead <= 0)
-    return false;
-
-  outBuffer.push_back(packetId);
-
-  int expectedSize = getExpectedPacketSize(static_cast<uint8_t>(packetId));
-  if (expectedSize > 0) {
-    std::vector<char> rest(expectedSize);
-    ssize_t restRead = recv(fd_local, rest.data(), expectedSize, MSG_WAITALL);
-    if (restRead <= 0)
-      return false;
-    outBuffer.insert(outBuffer.end(), rest.begin(), rest.end());
-    return true;
-  }
-
-  char tempBuf[1024];
-  ssize_t len = recv(fd_local, tempBuf, sizeof(tempBuf), MSG_DONTWAIT);
-  if (len > 0) {
-    outBuffer.insert(outBuffer.end(), tempBuf, tempBuf + len);
-  }
-
-  return true;
-}
-
-bool
-Connection::isAlive()
-{
-  // stupid function... I hate data race !
-  LockGuard sl(this->stateMutex);
-  return this->client_FD != -1;
+  return this->socket_.is_open();
 }
 
 void
-Connection::disconnect(const utils::UTF16String& reason)
+Connection::disconnect(const UTF16String& reason)
 {
   packet::KickPacket* kickPacket = new packet::KickPacket(reason);
   addPacketToQueue(kickPacket);
-  sendAndFlushQueue();
-
-  {
-    LockGuard sl(this->stateMutex);
-    if (this->client_FD != -1) {
-      close(this->client_FD);
-      this->client_FD = -1;
-    }
-  }
+  socket_.close();
 
   if (this->player) {
-    utils::ConsoleUtils::getInstance().printMessage("Disconnected: " +
-                                                    this->player->getName());
+    ConsoleUtils::getInstance().printMessage("Disconnected: " +
+                                             this->player->getName());
   } else {
-    utils::ConsoleUtils::getInstance().printMessage("Disconnected: (unknown)");
+    ConsoleUtils::getInstance().printMessage("Disconnected: (unknown)");
   }
 }
 
 void
-Connection::handlePacket(packet::Buffer& buffer)
+Connection::start_read()
 {
-  // Read the packet id
-  switch (buffer.readByte()) {
-    // case 0xFE: this->handlePacket(packet::ServerPingPacket(buffer));
-    default:
-      return;
-  };
-  // Then call the function again but with the packet
+
+  socket_.async_read_some(readBuffer.mutableBuffer(),
+                          std::bind(&Connection::handle_read,
+                                    this->shared_from_this(),
+                                    asio::placeholders::error,
+                                    asio::placeholders::bytes_transferred));
 }
 
 void
-Connection::handlePacket(packet::ServerPingPacket& packet)
+Connection::handle_read(const std::error_code& error, std::size_t)
 {
+  if (!error) {
+    if (cipher != nullptr)
+      readBuffer.decrypt(*cipher);
+
+    bool read = true;
+    while (read) {
+      try {
+        if (auto handler = PACKETS_HANDLERS.find(readBuffer.readByte());
+            handler != PACKETS_HANDLERS.end()) {
+          (this->*handler->second)();
+        }
+      } catch (std::runtime_error&) {
+        read = false;
+        readBuffer.clearBuffer();
+      }
+      this_thread::sleep_for(chrono::milliseconds(20));
+    }
+
+    if (time(nullptr) - lastActivity > 20) {
+      disconnect(UTF16String("Timed out"));
+    }
+    lastActivity = time(nullptr);
+    start_read();
+  }
+}
+void
+Connection::start_write()
+{
+  using packet::Packet;
+  {
+    lock_guard qlg(queueMutex);
+    for (const auto it = queue.begin(); it != queue.end();) {
+      Packet* packet = *it;
+      packet->writeData(writeBuffer);
+      delete packet;
+      queue.erase(it);
+    }
+  }
+  if (cipher != nullptr)
+    writeBuffer.encrypt(*cipher);
+  asio::async_write(socket_,
+                    writeBuffer.constBuffer(),
+                    std::bind(&Connection::handle_write,
+                              shared_from_this(),
+                              asio::placeholders::error,
+                              asio::placeholders::bytes_transferred));
+}
+void
+Connection::handle_write(const std::error_code& error, std::size_t)
+{
+  if (!error) {
+    writeBuffer.clearBuffer();
+    start_write();
+  }
+}
+asio::ip::tcp::socket&
+Connection::socket()
+{
+  return socket_;
+}
+
+///
+///  _____________________HANDLERS__________________________________
+///
+
+void
+Connection::handleServerPingPacket()
+{
+  if (status == HANDSHAKE) {
+    packet::ServerPingPacket serverPing;
+    serverPing.readData(readBuffer);
+    packet::KickPacket pingResponsePacket(
+      serializeServerInfo("1.4.7", "A server running Carpet SRV", 0, 20));
+    addPacketToQueue(&pingResponsePacket);
+  }
+  socket_.close();
+}
+
+void
+Connection::handleHandshake()
+{
+  if (status == HANDSHAKE) {
+    packet::ClientProtocolPacket clientProtocolPacket;
+    clientProtocolPacket.readData(readBuffer);
+    if (clientProtocolPacket.getProtocolVersion() != 51) {
+      socket_.close();
+      ConsoleUtils::getInstance().printMessage("Invalid version");
+    }
+    if (this->player)
+      this->player->setUsername(clientProtocolPacket.getUsername());
+    ConsoleUtils::getInstance().printMessage(
+      "[Server] Got connection from " + clientProtocolPacket.getServerHost() +
+      " with username \\\"" + this->player->getName() + "\\\"");
+
+    packet::ServerAuthDataPacket serverAuthDataPacket;
+    addPacketToQueue(&serverAuthDataPacket);
+    verifyToken = serverAuthDataPacket.getVerifyToken();
+    status = LOGIN;
+  } else {
+    socket_.close();
+  }
+}
+void
+Connection::handleSharedKeyPacket()
+{
+  if (status == LOGIN) {
+    packet::SharedKeyPacket sharedKeyPacket;
+    sharedKeyPacket.readData(readBuffer);
+    if (verifyToken != sharedKeyPacket.getVerifyToken()) {
+      socket_.close();
+      ConsoleUtils::getInstance().printMessage(
+        "Excepted an exact same verify token");
+    }
+
+    this->cipher = new crypto::AESCipher(sharedKeyPacket.getSharedSecret());
+    addPacketToQueue(&sharedKeyPacket);
+    packet::LoginPacket loginPacket;
+    addPacketToQueue(&loginPacket);
+    status = PLAY;
+  } else {
+    socket_.close();
+  }
+}
+
+void
+Connection::handleClientInfo()
+{
+  packet::ClientInfoPacket infoPacket;
+  infoPacket.readData(readBuffer);
+  if (player) {
+    player->setLanguage(infoPacket.getLanguage());
+    player->setShowCape(infoPacket.getShowCape());
+    player->setRenderDistance(infoPacket.getRenderDistance());
+  }
+}
+void
+Connection::handleKeepAlive()
+{
+  packet::KeepAlivePacket* keepAlivePacket =
+    new packet::KeepAlivePacket();
+  addPacketToQueue(keepAlivePacket);
+}
+void
+Connection::handlePositionPacket()
+{
+  packet::PlayerPositionPacket positionPacket;
+  positionPacket.readData(readBuffer);
+  if (player) {
+    player->setPosition(positionPacket.getX(),
+                              positionPacket.getY(),
+                              positionPacket.getZ());
+  }
 }
 
 }

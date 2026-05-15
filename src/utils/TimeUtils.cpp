@@ -12,7 +12,6 @@
 using namespace std;
 using namespace utils;
 
-// THIS WAS A PAIN. also I don't know for windaube?
 double
 TimeUtils::getTimeMillis()
 {

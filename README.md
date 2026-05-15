@@ -7,6 +7,8 @@ This is a little minecraft server 1.4.7 written in C++ 98. It's mainly made for 
 ### Authors 
 - [tetram26](<mailto://dev@tetram26.org>)
 
+### Special thanks
+- [ht06](<https://github.com/hthug06>) for being a big help on this project ^^ 
 ### Features 
 
 - Basic ping response 
@@ -85,3 +87,6 @@ This project follow a few rules :
 I had for first idea to use Cpp 98 but I stepped against cross platform compilation problems.
 
 *I hate data races and memory leak >:(*
+
+### About AI 
+I used AI in the past, but now I'm trying to get rid of it entirely so I am trying as much as possible to not use it. Only when I'm stuck on an unsolvable problem.

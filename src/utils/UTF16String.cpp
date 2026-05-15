@@ -3,10 +3,10 @@
 //
 
 #include "utils/UTF16String.h"
-
+#include <iostream>
 #include <string>
 #include <utils/ConsoleUtils.h>
-
+namespace utils {
 utils::UTF16String::UTF16String()
   : characters(NULL)
   , length(0)
@@ -131,7 +131,7 @@ utils::UTF16String::toString() const
 std::ostream&
 utils::UTF16String::display(std::ostream& outputStream) const
 {
-  outputStream << this->toString();
+  outputStream << toString();
   return outputStream;
 }
 
@@ -165,4 +165,5 @@ utils::UTF16String::operator=(const UTF16String& string)
     }
   }
   return *this;
+}
 }

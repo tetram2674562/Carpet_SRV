@@ -23,14 +23,14 @@ AESCipher::AESCipher(const std::vector<unsigned char>& inputKey)
   encryptCtx = EVP_CIPHER_CTX_new();
   if (!encryptCtx)
     throw std::runtime_error("Failed to create encrypt context");
-  if (EVP_EncryptInit_ex(encryptCtx, EVP_aes_128_cfb8(), NULL, k, k) != 1)
+  if (EVP_EncryptInit_ex(encryptCtx, EVP_aes_128_cfb8(), nullptr, k, k) != 1)
     throw std::runtime_error("Failed to init AES encrypt");
 
   // Create decryption context
   decryptCtx = EVP_CIPHER_CTX_new();
   if (!decryptCtx)
     throw std::runtime_error("Failed to create decrypt context");
-  if (EVP_DecryptInit_ex(decryptCtx, EVP_aes_128_cfb8(), NULL, k, k) != 1)
+  if (EVP_DecryptInit_ex(decryptCtx, EVP_aes_128_cfb8(), nullptr, k, k) != 1)
     throw std::runtime_error("Failed to init AES decrypt");
 }
 
@@ -42,14 +42,14 @@ AESCipher::AESCipher(const AESCipher& cipher)
   encryptCtx = EVP_CIPHER_CTX_new();
   if (!encryptCtx)
     throw std::runtime_error("Failed to create encrypt context");
-  if (EVP_EncryptInit_ex(encryptCtx, EVP_aes_128_cfb8(), NULL, k, k) != 1)
+  if (EVP_EncryptInit_ex(encryptCtx, EVP_aes_128_cfb8(), nullptr, k, k) != 1)
     throw std::runtime_error("Failed to init AES encrypt");
 
   // Create decryption context
   decryptCtx = EVP_CIPHER_CTX_new();
   if (!decryptCtx)
     throw std::runtime_error("Failed to create decrypt context");
-  if (EVP_DecryptInit_ex(decryptCtx, EVP_aes_128_cfb8(), NULL, k, k) != 1)
+  if (EVP_DecryptInit_ex(decryptCtx, EVP_aes_128_cfb8(), nullptr, k, k) != 1)
     throw std::runtime_error("Failed to init AES decrypt");
 }
 
@@ -77,46 +77,43 @@ AESCipher::~AESCipher()
   CRYPTO_cleanup_all_ex_data();
 }
 
-std::vector<unsigned char>
-AESCipher::decrypt(const std::vector<unsigned char>& data)
+void
+AESCipher::decrypt(const std::vector<unsigned char>& encryptedData, std::vector<unsigned char>& decryptedData) const
 {
   if (!decryptCtx)
     throw std::runtime_error("decryptCtx is null!");
-
-  std::vector<unsigned char> out(data.size() +
-                                 AES_BLOCK_SIZE); // Ensure enough space
+  decryptedData.reserve(encryptedData.size() +
+                                 AES_BLOCK_SIZE);
   int outlen = 0;
   if (EVP_DecryptUpdate(decryptCtx,
-                        out.data(),
+                        decryptedData.data(),
                         &outlen,
-                        data.data(),
-                        static_cast<int>(data.size())) != 1) {
+                        encryptedData.data(),
+                        static_cast<int>(encryptedData.size())) != 1) {
     throw std::runtime_error("AES decryption failed");
   }
 
-  out.resize(outlen);
-  return out;
+  decryptedData.resize(outlen);
 }
 
-std::vector<unsigned char>
-AESCipher::encrypt(const std::vector<unsigned char>& data)
+void
+AESCipher::encrypt(const std::vector<unsigned char>& decryptedData, std::vector<unsigned char>& encryptedData) const
 {
   if (!encryptCtx)
     throw std::runtime_error("encryptCtx is null!");
 
-  std::vector<unsigned char> out(data.size() +
+  encryptedData.reserve(decryptedData.size() +
                                  AES_BLOCK_SIZE); // Ensure enough space
   int outlen = 0;
   if (EVP_EncryptUpdate(encryptCtx,
-                        out.data(),
+                        encryptedData.data(),
                         &outlen,
-                        data.data(),
-                        static_cast<int>(data.size())) != 1) {
+                        decryptedData.data(),
+                        static_cast<int>(decryptedData.size())) != 1) {
     throw std::runtime_error("AES encryption failed");
   }
 
-  out.resize(outlen);
-  return out;
+  encryptedData.resize(outlen);
 }
 
 }

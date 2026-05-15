@@ -5,11 +5,10 @@
 #ifndef CARPET_SRV_QUEUE_H
 #define CARPET_SRV_QUEUE_H
 #include "packet/Packet.h"
-#include "utils/Mutex.h"
 #include <iostream>
 namespace utils {
 template<typename T>
-class Queue
+class [[deprecated]] Queue
 {
 public:
   Queue(int inc_dec_size);
@@ -21,7 +20,7 @@ public:
 
   void remove();
 
-  bool estVide() const;
+  bool isEmpty() const;
 
   ~Queue();
   const T operator[](int) const;
@@ -40,7 +39,7 @@ private:
   int tab_size;
   int computed_size;
   int inc_dec_size;
-  mutable Mutex queueMutex;
+  mutable std::mutex queueMutex;
 };
 }
 #endif // CARPET_SRV_QUEUE_H

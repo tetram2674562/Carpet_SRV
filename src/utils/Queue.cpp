@@ -3,8 +3,6 @@
 //
 #include "utils/Queue.h"
 #include <iostream>
-
-#include "utils/LockGuard.h"
 using namespace std;
 
 namespace utils {
@@ -69,7 +67,7 @@ void
 Queue<T>::add(T caractere)
 {
 
-  LockGuard lock(this->queueMutex);
+  lock_guard lock(this->queueMutex);
   // Si la taille du tableau n'est pas suffisante pour enfilé
   if (this->computed_size >= this->tab_size) {
     // On réalloue un tableau plus grand
@@ -93,7 +91,7 @@ template<class T>
 void
 Queue<T>::remove()
 {
-  LockGuard lock(this->queueMutex);
+  lock_guard lock(this->queueMutex);
   if (this->computed_size != 0) {
     if (this->computed_size <= this->tab_size / 4 &&
         this->tab_size > this->inc_dec_size) {
@@ -116,7 +114,7 @@ Queue<T>::remove()
 
 template<class T>
 bool
-Queue<T>::estVide() const
+Queue<T>::isEmpty() const
 {
   return this->size() == 0;
 }
@@ -125,7 +123,7 @@ template<class T>
 const T
 Queue<T>::operator[](int index) const
 {
-  LockGuard lock(this->queueMutex);
+  lock_guard lock(this->queueMutex);
   if (index < 0 || index >= this->computed_size) {
     throw invalid_argument("Invalid index");
   }
@@ -136,7 +134,7 @@ template<class T>
 T
 Queue<T>::operator[](int index)
 {
-  LockGuard lock(this->queueMutex);
+  lock_guard lock(this->queueMutex);
   if (index < 0 || index >= this->computed_size) {
     throw invalid_argument("Invalid index");
   }
@@ -147,7 +145,7 @@ template<class T>
 void
 Queue<T>::display(std::ostream& outputStream)
 {
-  LockGuard lock(this->queueMutex);
+  lock_guard lock(this->queueMutex);
   outputStream << "[";
   for (unsigned int i = 0; i < this->computed_size; i++) {
     if (this->computed_size - i == 1) {
@@ -163,7 +161,7 @@ template<typename T>
 int
 Queue<T>::size() const
 {
-  LockGuard lock(this->queueMutex);
+  lock_guard lock(this->queueMutex);
   return this->computed_size;
 }
 
@@ -176,8 +174,8 @@ Queue<T>::addAll(const Queue<T>& queue)
   const Queue<T>* first = (this < &queue) ? this : &queue;
   const Queue<T>* second = (this < &queue) ? &queue : this;
 
-  LockGuard lockFirst(first->queueMutex);
-  LockGuard lockSecond(second->queueMutex);
+  lock_guard lockFirst(first->queueMutex);
+  lock_guard lockSecond(second->queueMutex);
   for (unsigned int i = 0; i < queue.computed_size; i++) {
     if (this->computed_size >= this->tab_size) {
       T* new_tab = new T[this->tab_size + this->inc_dec_size];
@@ -198,6 +196,4 @@ Queue<T>::addAll(const Queue<T>& queue)
     ++this->computed_size;
   }
 }
-// Init packet queue
-template class utils::Queue<packet::Packet*>;
 }

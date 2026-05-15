@@ -4,7 +4,8 @@
 #ifndef CONSOLEUTILS_H
 #define CONSOLEUTILS_H
 
-#include "Mutex.h"
+#include <mutex>
+
 #include "UTF16String.h"
 
 namespace utils {
@@ -20,8 +21,8 @@ public:
 
 private:
   ConsoleUtils();
-  Mutex consoleMutex;
-  Mutex inputMutex;
+  std::mutex consoleMutex;
+  std::mutex inputMutex;
   static ConsoleUtils instance;
 };
 }

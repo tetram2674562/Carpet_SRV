@@ -5,7 +5,7 @@
 #ifndef CARPET_SRV_UTF16STRING_H
 #define CARPET_SRV_UTF16STRING_H
 #include <iosfwd>
-
+#include <string>
 namespace utils {
 class UTF16String
 {
