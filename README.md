@@ -2,7 +2,7 @@
 
 ## A little minecraft server 1.4.7 written in C++
 
-This is a little minecraft server 1.4.7 written in C++ 98. It's mainly made for experimentation, while allowing me to train myself to C++.
+This is a little minecraft server 1.4.7 written in C++. It's mainly made for experimentation, while allowing me to train myself to C++.
 
 ### Authors 
 - [tetram26](<mailto://dev@tetram26.org>)
