@@ -9,7 +9,6 @@
 #include "command/CommandHandler.h"
 #include "network/Connection.h"
 #include "utils/ConsoleUtils.h"
-#include "utils/TimeUtils.h"
 using namespace std;
 using namespace utils;
 using namespace asio;
@@ -131,12 +130,12 @@ VanillaMinecraftServer::tick()
   lock_guard lock_players(this->playersMutex);
   for (size_t i = 0; i < players.size();) {
     entity::Player* player = this->players[i];
-    if (player == NULL) {
+    if (player == nullptr) {
       players.erase(players.begin() + i);
       continue;
     }
     if (!player->getConnection().isAlive()) {
-      utils::ConsoleUtils::getInstance().printMessage(
+      ConsoleUtils::getInstance().printMessage(
         "Client " + player->getName() + " disconnected.");
       player->kickPlayer(ConsoleUtils::createUTF16String("Ligma balls"));
       delete player;
@@ -172,21 +171,14 @@ VanillaMinecraftServer::handle_accept(
   const error_code& error)
 {
   if (!error) {
-    const auto timer = std::make_shared<steady_timer>(io_context_,
-                                                std::chrono::milliseconds(20));
-
-    timer->async_wait([this, new_connection](const error_code& timerError) {
-      if (!timerError) {
-        ConsoleUtils::getInstance().printMessage(
-          "New connection encountered !");
-        const auto player = new entity::Player(new_connection);
-        {
-          lock_guard lock(playersMutex);
-          players.push_back(player);
-        }
-        player->handleConnection();
-      }
-    });
+    ConsoleUtils::getInstance().printMessage(
+      "New connection encountered !");
+    const auto player = new entity::Player(new_connection);
+    {
+      lock_guard lock(playersMutex);
+      players.push_back(player);
+    }
+    player->handleConnection();
   }
 
   start_accept();

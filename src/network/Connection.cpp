@@ -3,8 +3,8 @@
 //
 #include <map>
 
-#include "network/Connection.h"
 #include "entity/player/Player.h"
+#include "network/Connection.h"
 #include "packet/handshake/ClientProtocolPacket.h"
 #include "packet/handshake/KickPacket.h"
 #include "packet/handshake/ServerPingPacket.h"
@@ -16,7 +16,6 @@
 #include "packet/play/player/PlayerPositionPacket.h"
 #include "utils/ConsoleUtils.h"
 
-
 #include "utils/UTF16String.h"
 
 using namespace std;
@@ -26,20 +25,20 @@ namespace network {
 
 const std::map<unsigned char, Connection::PacketHandler>
   Connection::PACKETS_HANDLERS{
-    {0xFE,&Connection::handleServerPingPacket},
-    {0x02,&Connection::handleHandshake},
-    {0xFC,&Connection::handleSharedKeyPacket},
-    {0xCC,&Connection::handleClientInfo},
-    {0x00,&Connection::handleKeepAlive},
-    {0x0B,&Connection::handlePositionPacket},
+    { 0xFE, &Connection::handleServerPingPacket },
+    { 0x02, &Connection::handleHandshake },
+    { 0xFC, &Connection::handleSharedKeyPacket },
+    { 0xCC, &Connection::handleClientInfo },
+    { 0x00, &Connection::handleKeepAlive },
+    { 0x0B, &Connection::handlePositionPacket },
   };
 
 Connection::Connection(asio::io_context& io_context)
   : socket_(io_context)
-  , queue(20)
   , lastActivity(time(nullptr))
   , player(nullptr)
   , status(HANDSHAKE)
+  , isWriting(false)
 {
   this->cipher = nullptr;
 }
@@ -53,8 +52,14 @@ Connection::create(asio::io_context& io_context)
 void
 Connection::addPacketToQueue(packet::Packet* packet)
 {
-  lock_guard qlg(this->queueMutex);
-  this->queue.push_back(packet);
+
+  ConsoleUtils::getInstance().printMessage("written packet to queue");
+  {
+    lock_guard qlg(queueMutex);
+    this->queue.push_back(packet);
+  }
+  if (!isWriting)
+    start_write();
 }
 void
 Connection::handleConnection(entity::Player& player)
@@ -92,7 +97,6 @@ void
 Connection::performLoginSequence()
 {
   start_read();
-  start_write();
 }
 
 bool
@@ -119,7 +123,10 @@ Connection::disconnect(const UTF16String& reason)
 void
 Connection::start_read()
 {
-
+  if (readBuffer.read_pos() >= readBuffer.size()) {
+    readBuffer.clearBuffer();
+  }
+  
   socket_.async_read_some(readBuffer.mutableBuffer(),
                           std::bind(&Connection::handle_read,
                                     this->shared_from_this(),
@@ -128,18 +135,21 @@ Connection::start_read()
 }
 
 void
-Connection::handle_read(const std::error_code& error, std::size_t)
+Connection::handle_read(const std::error_code& error, std::size_t size)
 {
   if (!error) {
     if (cipher != nullptr)
       readBuffer.decrypt(*cipher);
-
+    ConsoleUtils::getInstance().printMessage(
+      "Received : " + std::to_string((int)size) + " bytes");
     bool read = true;
     while (read) {
       try {
-        if (auto handler = PACKETS_HANDLERS.find(readBuffer.readByte());
-            handler != PACKETS_HANDLERS.end()) {
-          (this->*handler->second)();
+        if (size - readBuffer.read_pos() > 0) {
+          if (auto handler = PACKETS_HANDLERS.find(readBuffer.readByte());
+              handler != PACKETS_HANDLERS.end()) {
+            (this->*handler->second)();
+          }
         }
       } catch (std::runtime_error&) {
         read = false;
@@ -158,16 +168,25 @@ Connection::handle_read(const std::error_code& error, std::size_t)
 void
 Connection::start_write()
 {
+  /*
+  while (queue.empty()) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  }*/
+
+  if (isWriting) return;
+  isWriting = true;
+
   using packet::Packet;
   {
     lock_guard qlg(queueMutex);
-    for (const auto it = queue.begin(); it != queue.end();) {
+    for (auto it = queue.begin(); it != queue.end();) {
       Packet* packet = *it;
       packet->writeData(writeBuffer);
       delete packet;
-      queue.erase(it);
+      it = queue.erase(it);
     }
   }
+  ConsoleUtils::getInstance().printMessage("written thingies ! ");
   if (cipher != nullptr)
     writeBuffer.encrypt(*cipher);
   asio::async_write(socket_,
@@ -178,11 +197,17 @@ Connection::start_write()
                               asio::placeholders::bytes_transferred));
 }
 void
-Connection::handle_write(const std::error_code& error, std::size_t)
+Connection::handle_write(const std::error_code& error, std::size_t size)
 {
+  isWriting = false; 
   if (!error) {
-    writeBuffer.clearBuffer();
-    start_write();
+    ConsoleUtils::getInstance().printMessage("Packet sent to connection (size of " + to_string(size) + ")");
+    if (size != 0 && status == PING) {
+      socket_.close();
+      ConsoleUtils::getInstance().printMessage("Client pinged the server, closing connection.");
+    } else {
+      writeBuffer.clearBuffer();
+    }
   }
 }
 asio::ip::tcp::socket&
@@ -198,14 +223,15 @@ Connection::socket()
 void
 Connection::handleServerPingPacket()
 {
+  ConsoleUtils::getInstance().printMessage("Server ping packet received !");
   if (status == HANDSHAKE) {
     packet::ServerPingPacket serverPing;
     serverPing.readData(readBuffer);
-    packet::KickPacket pingResponsePacket(
+    packet::KickPacket * pingResponsePacket = new packet::KickPacket(
       serializeServerInfo("1.4.7", "A server running Carpet SRV", 0, 20));
-    addPacketToQueue(&pingResponsePacket);
+    addPacketToQueue(pingResponsePacket);
+    status = PING;
   }
-  socket_.close();
 }
 
 void
@@ -218,15 +244,15 @@ Connection::handleHandshake()
       socket_.close();
       ConsoleUtils::getInstance().printMessage("Invalid version");
     }
-    if (this->player)
+    if (this->player) {
       this->player->setUsername(clientProtocolPacket.getUsername());
-    ConsoleUtils::getInstance().printMessage(
-      "[Server] Got connection from " + clientProtocolPacket.getServerHost() +
-      " with username \\\"" + this->player->getName() + "\\\"");
-
-    packet::ServerAuthDataPacket serverAuthDataPacket;
-    addPacketToQueue(&serverAuthDataPacket);
-    verifyToken = serverAuthDataPacket.getVerifyToken();
+      ConsoleUtils::getInstance().printMessage(
+        "[Server] Got connection from " + clientProtocolPacket.getServerHost() +
+        " with username \\\"" + this->player->getName() + "\\\"");
+    }
+    packet::ServerAuthDataPacket *serverAuthDataPacket = new packet::ServerAuthDataPacket;
+    addPacketToQueue(serverAuthDataPacket);
+    verifyToken = serverAuthDataPacket->getVerifyToken();
     status = LOGIN;
   } else {
     socket_.close();
@@ -236,18 +262,18 @@ void
 Connection::handleSharedKeyPacket()
 {
   if (status == LOGIN) {
-    packet::SharedKeyPacket sharedKeyPacket;
-    sharedKeyPacket.readData(readBuffer);
-    if (verifyToken != sharedKeyPacket.getVerifyToken()) {
+    packet::SharedKeyPacket *sharedKeyPacket = new packet::SharedKeyPacket;
+    sharedKeyPacket->readData(readBuffer);
+    if (verifyToken != sharedKeyPacket->getVerifyToken()) {
       socket_.close();
       ConsoleUtils::getInstance().printMessage(
         "Excepted an exact same verify token");
     }
 
-    this->cipher = new crypto::AESCipher(sharedKeyPacket.getSharedSecret());
-    addPacketToQueue(&sharedKeyPacket);
-    packet::LoginPacket loginPacket;
-    addPacketToQueue(&loginPacket);
+    this->cipher = new crypto::AESCipher(sharedKeyPacket->getSharedSecret());
+    addPacketToQueue(sharedKeyPacket);
+    packet::LoginPacket* loginPacket = new packet::LoginPacket;
+    addPacketToQueue(loginPacket);
     status = PLAY;
   } else {
     socket_.close();
@@ -268,8 +294,7 @@ Connection::handleClientInfo()
 void
 Connection::handleKeepAlive()
 {
-  packet::KeepAlivePacket* keepAlivePacket =
-    new packet::KeepAlivePacket();
+  packet::KeepAlivePacket* keepAlivePacket = new packet::KeepAlivePacket();
   addPacketToQueue(keepAlivePacket);
 }
 void
@@ -278,9 +303,8 @@ Connection::handlePositionPacket()
   packet::PlayerPositionPacket positionPacket;
   positionPacket.readData(readBuffer);
   if (player) {
-    player->setPosition(positionPacket.getX(),
-                              positionPacket.getY(),
-                              positionPacket.getZ());
+    player->setPosition(
+      positionPacket.getX(), positionPacket.getY(), positionPacket.getZ());
   }
 }
 

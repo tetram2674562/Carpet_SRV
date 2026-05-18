@@ -63,6 +63,8 @@ public:
   void encrypt(const crypto::AESCipher&);
   void decrypt(const crypto::AESCipher&);
 
+  size_t read_pos() const;
+
 private:
   std::vector<unsigned char> data;
   std::vector<unsigned char> decryptedData;

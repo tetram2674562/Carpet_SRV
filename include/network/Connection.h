@@ -55,7 +55,8 @@ public:
   {
     HANDSHAKE,
     LOGIN,
-    PLAY
+    PLAY,
+    PING
   };
 
 private:
@@ -72,6 +73,9 @@ private:
   // Packet queue
   std::vector<packet::Packet*> queue;
   std::mutex queueMutex;
+  std::atomic<bool> isWriting;
+
+
 
   std::mutex stateMutex;
   std::time_t lastActivity;

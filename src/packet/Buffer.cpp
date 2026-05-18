@@ -20,6 +20,13 @@ Buffer::Buffer()
 asio::mutable_buffer
 Buffer::mutableBuffer()
 {
+  const size_t READ_BUFFER_SIZE = 4096;
+  if (data.capacity() < READ_BUFFER_SIZE) {
+    data.reserve(READ_BUFFER_SIZE);
+  }
+  if (data.size() < READ_BUFFER_SIZE) {
+    data.resize(READ_BUFFER_SIZE);
+  }
   return asio::buffer(data.data() + readPos, data.size() - readPos);
 }
 
@@ -51,6 +58,7 @@ void
 Buffer::clearBuffer()
 {
   this->data.clear();
+  this->readPos = 0;
 }
 
 const vector<unsigned char>&
@@ -272,6 +280,10 @@ Buffer::decrypt(const crypto::AESCipher& cipher)
 {
   cipher.decrypt(data,decryptedData);
 }
-
+size_t
+Buffer::read_pos() const
+{
+  return readPos;
+}
 
 }
