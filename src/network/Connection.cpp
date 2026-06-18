@@ -113,8 +113,7 @@ void Connection::handle_read(const asio::error_code &error, std::size_t size) {
   if (!error) {
     if (cipher != nullptr)
       readBuffer.decrypt(*cipher);
-    ConsoleUtils::getInstance().printMessage(
-        "Received : " + std::to_string((int)size) + " bytes");
+
     process_packets(size);
 
     if (time(nullptr) - lastActivity > 20) {
@@ -229,9 +228,8 @@ void Connection::handleSharedKeyPacket() {
     sharedKeyPacket->readData(readBuffer);
     if (verifyToken != sharedKeyPacket->getVerifyToken()) {
       ConsoleUtils::getInstance().printMessage(
-          "Excepted an exact same verify token");
+          "Expected the exact same verify token");
     }
-
     this->cipher = new crypto::AESCipher(sharedKeyPacket->getSharedSecret());
     addPacketToQueue(sharedKeyPacket);
     auto *loginPacket = new packet::LoginPacket;
