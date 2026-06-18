@@ -5,9 +5,7 @@
 using namespace std;
 
 namespace packet {
-void
-LoginPacket::writeData(Buffer& buffer)
-{
+void LoginPacket::writeData(Buffer &buffer) {
   // Experimentation
   buffer.writeByte(0x01);
   buffer.writeInt(1);         // Entity ID 1
@@ -19,8 +17,5 @@ LoginPacket::writeData(Buffer& buffer)
   buffer.writeByte(20);       //
 }
 
-void
-LoginPacket::readData(Buffer&)
-{
-}
-}
+void LoginPacket::readData(Buffer &) {}
+} // namespace packet

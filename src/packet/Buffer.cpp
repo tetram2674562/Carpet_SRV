@@ -6,20 +6,12 @@
 #include "utils/ConsoleUtils.h"
 using namespace std;
 namespace packet {
-Buffer::Buffer(const std::vector<unsigned char>& bytesArray)
-  : data(bytesArray.begin(), bytesArray.end())
-  , readPos(0)
-{
-}
+Buffer::Buffer(const std::vector<unsigned char> &bytesArray)
+    : data(bytesArray.begin(), bytesArray.end()), readPos(0) {}
 
-Buffer::Buffer()
-  : readPos(0)
-{
-}
+Buffer::Buffer() : readPos(0) {}
 
-asio::mutable_buffer
-Buffer::mutableBuffer()
-{
+asio::mutable_buffer Buffer::mutableBuffer() {
   const size_t READ_BUFFER_SIZE = 4096;
   if (data.capacity() < READ_BUFFER_SIZE) {
     data.reserve(READ_BUFFER_SIZE);
@@ -30,56 +22,34 @@ Buffer::mutableBuffer()
   return asio::buffer(data.data() + readPos, data.size() - readPos);
 }
 
-asio::const_buffer
-Buffer::constBuffer() const
-{
+asio::const_buffer Buffer::constBuffer() const {
   return asio::buffer(data.data() + readPos, data.size() - readPos);
 }
 
-std::size_t
-Buffer::size() const
-{
-  return data.size();
-}
+std::size_t Buffer::size() const { return data.size(); }
 
-void
-Buffer::resize(std::size_t n)
-{
-  data.resize(n);
-}
+void Buffer::resize(std::size_t n) { data.resize(n); }
 
-void
-Buffer::addDatas(const std::vector<unsigned char>& data)
-{
+void Buffer::addDatas(const std::vector<unsigned char> &data) {
   this->data.insert(this->data.end(), data.begin(), data.end());
 }
 
-void
-Buffer::clearBuffer()
-{
+void Buffer::clearBuffer() {
   this->data.clear();
   this->readPos = 0;
 }
 
-const vector<unsigned char>&
-Buffer::getDataBuffer() const
-{
+const vector<unsigned char> &Buffer::getDataBuffer() const {
   return this->data;
 }
 
-std::vector<unsigned char>&
-Buffer::getDataBuffer()
-{
-  return data;
-}
+std::vector<unsigned char> &Buffer::getDataBuffer() { return data; }
 
 /** Read a char from the buffer
  *
  * @return A char
  */
-unsigned char
-Buffer::readByte()
-{
+unsigned char Buffer::readByte() {
   if (readPos >= data.size())
     throw std::runtime_error("Buffer underflow");
   return data[readPos++];
@@ -89,19 +59,13 @@ Buffer::readByte()
  *
  * @param byte the byte
  */
-void
-Buffer::writeByte(unsigned char byte)
-{
-  data.push_back(byte);
-}
+void Buffer::writeByte(unsigned char byte) { data.push_back(byte); }
 
 /** Read a short from the buffer
  *
  * @return A short
  */
-short
-Buffer::readShort()
-{
+short Buffer::readShort() {
   if (readPos + 2 > data.size())
     throw std::runtime_error("Buffer underflow");
 
@@ -113,9 +77,7 @@ Buffer::readShort()
  *
  * @param number A short
  */
-void
-Buffer::writeShort(const short number)
-{
+void Buffer::writeShort(const short number) {
   this->data.push_back(static_cast<unsigned char>((number >> 8) & 0xFF));
   this->data.push_back(static_cast<unsigned char>(number & 0xFF));
 }
@@ -124,19 +86,13 @@ Buffer::writeShort(const short number)
  *
  * @return A char
  */
-char
-Buffer::readChar()
-{
-  return (char)readShort();
-}
+char Buffer::readChar() { return (char)readShort(); }
 
 /** Write a char to the buffer
  *
  * @param c A char
  */
-void
-Buffer::writeChar(char c)
-{
+void Buffer::writeChar(char c) {
   this->data.push_back(0x00); // high char
   this->data.push_back(c);    // low char
 }
@@ -145,18 +101,16 @@ Buffer::writeChar(char c)
  *
  * @return The string
  */
-string
-Buffer::readString(int maxSize)
-{
+string Buffer::readString(int maxSize) {
   const short stringLen = this->readShort();
   string result;
   if (stringLen > maxSize) {
     utils::ConsoleUtils::getInstance().printerr(
-      "Received string length longer than maximum allowed (> " +
-      to_string(maxSize) + ")");
+        "Received string length longer than maximum allowed (> " +
+        to_string(maxSize) + ")");
   } else if (stringLen < 0) {
     utils::ConsoleUtils::getInstance().printerr(
-      "Received string length negative (< 0)");
+        "Received string length negative (< 0)");
   } else {
     result.reserve(stringLen);
     for (int i = 0; i < stringLen; i++) {
@@ -169,18 +123,14 @@ Buffer::readString(int maxSize)
  *
  * @param str A string
  */
-void
-Buffer::writeString(const string& str)
-{
+void Buffer::writeString(const string &str) {
   writeShort(static_cast<short>(str.size()));
   for (const char i : str) {
     writeChar(i);
   }
 }
 
-double
-Buffer::readDouble()
-{
+double Buffer::readDouble() {
   if (readPos + 8 > data.size())
     throw std::runtime_error("Buffer underflow");
 
@@ -193,9 +143,7 @@ Buffer::readDouble()
   return value;
 }
 
-void
-Buffer::writeDouble(double number)
-{
+void Buffer::writeDouble(double number) {
   uint64_t raw;
   std::memcpy(&raw, &number, sizeof(double));
 
@@ -204,16 +152,12 @@ Buffer::writeDouble(double number)
   }
 }
 
-void
-Buffer::writeUTF16Char(unsigned short ch)
-{
+void Buffer::writeUTF16Char(unsigned short ch) {
   this->data.push_back(static_cast<unsigned char>(ch >> 8)); // high char
   this->data.push_back(static_cast<unsigned char>(ch & 0xFF));
 }
 
-void
-Buffer::writeUTF16String(const utils::UTF16String& str)
-{
+void Buffer::writeUTF16String(const utils::UTF16String &str) {
   writeShort(static_cast<short>(str.size()));
 
   for (int i = 0; i < str.size(); i++) {
@@ -221,9 +165,7 @@ Buffer::writeUTF16String(const utils::UTF16String& str)
   }
 }
 
-vector<unsigned char>
-Buffer::readBytes()
-{
+vector<unsigned char> Buffer::readBytes() {
   const int16_t len = readShort();
   if (len < 0) {
     throw std::runtime_error("Negative char array length in packet.");
@@ -231,7 +173,7 @@ Buffer::readBytes()
 
   if (len > data.size()) {
     throw std::runtime_error(
-      "Not enough chars left in packet to read char array.");
+        "Not enough chars left in packet to read char array.");
   }
   vector<unsigned char> result(len);
   std::memcpy(result.data(), data.data() + readPos, len);
@@ -239,51 +181,33 @@ Buffer::readBytes()
   return result;
 }
 
-void
-Buffer::writeBytes(const vector<unsigned char>& bytes)
-{
+void Buffer::writeBytes(const vector<unsigned char> &bytes) {
   writeShort(static_cast<short>(bytes.size()));
   for (const unsigned char byte : bytes) {
     writeByte(byte);
   }
 }
-void
-Buffer::writeInt(const int number)
-{
+void Buffer::writeInt(const int number) {
   writeByte(static_cast<unsigned char>((number >> 24) & 0xFF));
   writeByte(static_cast<unsigned char>((number >> 16) & 0xFF));
   writeByte(static_cast<unsigned char>((number >> 8) & 0xFF));
   writeByte(static_cast<unsigned char>(number & 0xFF));
 }
 
-int
-Buffer::readInt()
-{
+int Buffer::readInt() {
   return static_cast<int>((static_cast<uint32_t>(readByte()) << 24) |
                           (static_cast<uint32_t>(readByte()) << 16) |
                           (static_cast<uint32_t>(readByte()) << 8) |
                           static_cast<uint32_t>(readByte()));
 }
 
-bool
-Buffer::readBool()
-{
-  return readByte() != 0;
+bool Buffer::readBool() { return readByte() != 0; }
+void Buffer::encrypt(const crypto::AESCipher &cipher) {
+  cipher.encrypt(decryptedData, data);
 }
-void
-Buffer::encrypt(const crypto::AESCipher& cipher)
-{
-  cipher.encrypt(decryptedData,data);
+void Buffer::decrypt(const crypto::AESCipher &cipher) {
+  cipher.decrypt(data, decryptedData);
 }
-void
-Buffer::decrypt(const crypto::AESCipher& cipher)
-{
-  cipher.decrypt(data,decryptedData);
-}
-size_t
-Buffer::read_pos() const
-{
-  return readPos;
-}
+size_t Buffer::read_pos() const { return readPos; }
 
-}
+} // namespace packet

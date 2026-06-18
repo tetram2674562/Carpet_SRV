@@ -12,9 +12,7 @@
 using namespace std;
 using namespace utils;
 
-double
-TimeUtils::getTimeMillis()
-{
+double TimeUtils::getTimeMillis() {
 #ifdef _WIN32
   LARGE_INTEGER freq;
   QueryPerformanceFrequency(&freq);
@@ -23,7 +21,7 @@ TimeUtils::getTimeMillis()
   return (double)counter.QuadPart * 1000.0 / (double)freq.QuadPart;
 #else
   struct timeval tv;
-  gettimeofday(&tv, 0);
+  gettimeofday(&tv, nullptr);
   return (double)tv.tv_sec * 1000.0 + (double)tv.tv_usec / 1000.0;
 #endif
 }

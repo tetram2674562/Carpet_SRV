@@ -5,10 +5,9 @@
 #ifndef TIMEUTILS_H
 #define TIMEUTILS_H
 namespace utils {
-class TimeUtils
-{
+class TimeUtils {
 public:
   static double getTimeMillis();
 };
-}
+} // namespace utils
 #endif // TIMEUTILS_H

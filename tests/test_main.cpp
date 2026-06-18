@@ -4,6 +4,4 @@
 
 #include "ftest.h"
 
-TEST(Predicates, assert_1_equal_1) {
-    EXPECT_EQ(1,1);
-}
+TEST(Predicates, assert_1_equal_1) { EXPECT_EQ(1, 1); }

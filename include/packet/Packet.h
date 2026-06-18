@@ -8,8 +8,7 @@
 
 #include "Buffer.h"
 namespace packet {
-class Packet
-{
+class Packet {
 public:
   Packet();
   virtual int getSize();
@@ -17,12 +16,12 @@ public:
 
   virtual int getPacketID();
 
-  virtual void writeData(Buffer&) = 0;
-  virtual void readData(Buffer&) = 0;
+  virtual void writeData(Buffer &) = 0;
+  virtual void readData(Buffer &) = 0;
 
 protected:
   int packetID;
   int size;
 };
-}
+} // namespace packet
 #endif // PACKET_H

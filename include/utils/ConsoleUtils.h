@@ -9,15 +9,14 @@
 #include "UTF16String.h"
 
 namespace utils {
-class ConsoleUtils
-{
+class ConsoleUtils {
 public:
-  static ConsoleUtils& getInstance();
-  void printMessage(const std::string&);
-  void printerr(const std::string&);
-  void getLine(std::string&);
+  static ConsoleUtils &getInstance();
+  void printMessage(const std::string &);
+  void printerr(const std::string &);
+  void getLine(std::string &);
   static std::string toString(int);
-  static utils::UTF16String createUTF16String(const std::string&);
+  static UTF16String createUTF16String(const std::string &);
 
 private:
   ConsoleUtils();
@@ -25,5 +24,5 @@ private:
   std::mutex inputMutex;
   static ConsoleUtils instance;
 };
-}
+} // namespace utils
 #endif // CONSOLEUTILS_H

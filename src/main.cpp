@@ -2,9 +2,7 @@
 #include <iostream>
 
 #include "server/VanillaMinecraftServer.h"
-void
-cleanup()
-{
+void cleanup() {
   if (server::VanillaMinecraftServer::getServer().isRunning()) {
     std::cout << "[Server] Server stopped!\n";
     server::VanillaMinecraftServer::getServer().shutdown();
@@ -12,25 +10,21 @@ cleanup()
     std::cout << "[Done]" << std::endl;
   }
 }
-void
-handleSignal(int sig)
-{
+void handleSignal(int sig) {
   std::cout << "\n[Signal] Caught signal: " << sig << ", cleaning up...\n";
   cleanup();
   std::_Exit(0);
 }
 
-int
-main()
-{
+int main() {
   // very messy, should rework that...
   utils::ConsoleUtils::getInstance().printMessage("Initializing...");
-  OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CONFIG, NULL);
+  OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CONFIG, nullptr);
   atexit(cleanup);
   signal(SIGINT, handleSignal);
   signal(SIGTERM, handleSignal);
   utils::ConsoleUtils::getInstance().printMessage(
-    "Emergency saving and encryption successfully initialized!");
+      "Emergency saving and encryption successfully initialized!");
   utils::ConsoleUtils::getInstance().printMessage("Starting server...");
   server::VanillaMinecraftServer::startServer();
 

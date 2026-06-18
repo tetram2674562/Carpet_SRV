@@ -15,19 +15,17 @@ using namespace utils;
 namespace command {
 // Command listener thread
 CommandHandler CommandHandler::instance;
-void
-CommandHandler::CommandListener(CommandHandler* instance)
-{
+void CommandHandler::CommandListener(CommandHandler *instance) {
   std::string command;
-  CommandHandler* self = instance;
+  CommandHandler *self = instance;
   while (self->isRunning()) {
-    utils::ConsoleUtils::getInstance().getLine(command);
-    std::vector<entity::Player*> playersSnapshot;
+    ConsoleUtils::getInstance().getLine(command);
+    std::vector<entity::Player *> playersSnapshot;
     {
       lock_guard lock(
-        server::VanillaMinecraftServer::getServer().getPlayersMutex());
+          server::VanillaMinecraftServer::getServer().getPlayersMutex());
       playersSnapshot =
-        server::VanillaMinecraftServer::getServer().getPlayers();
+          server::VanillaMinecraftServer::getServer().getPlayers();
     }
 
     int nbPlayer = static_cast<int>(playersSnapshot.size());
@@ -40,29 +38,27 @@ CommandHandler::CommandListener(CommandHandler* instance)
       ConsoleUtils::getInstance().printMessage("[Server] Kick from console!");
       if (nbPlayer == 0) {
         ConsoleUtils::getInstance().printMessage(
-          "[Server] There is no online players to kick...");
+            "[Server] There is no online players to kick...");
       } else {
         for (int i = 0; i < nbPlayer; ++i) {
-          entity::Player* player = playersSnapshot[i];
+          entity::Player *player = playersSnapshot[i];
           if (player) {
             server::VanillaMinecraftServer::getServer().requestKickPlayer(
-              player,
-              ConsoleUtils::createUTF16String(
-                "Kicked from the server by the console."));
+                player, ConsoleUtils::createUTF16String(
+                            "Kicked from the server by the console."));
           }
         }
         ConsoleUtils::getInstance().printMessage(
-          "Kicked " + std::to_string(nbPlayer) +
-          " players from the server.");
+            "Kicked " + std::to_string(nbPlayer) + " players from the server.");
       }
     } else if (command == "list") {
       if (nbPlayer == 0) {
         ConsoleUtils::getInstance().printMessage(
-          "[Server] There is no online players. ");
+            "[Server] There is no online players. ");
       } else {
         string playersList;
         for (size_t i = 0; i < playersSnapshot.size(); ++i) {
-          entity::Player* player = playersSnapshot[i];
+          entity::Player *player = playersSnapshot[i];
           if (player) {
             playersList += player->getName();
           }
@@ -71,8 +67,8 @@ CommandHandler::CommandListener(CommandHandler* instance)
           }
         }
         ConsoleUtils::getInstance().printMessage(
-          "There are " + to_string(nbPlayer) +
-          " players online: " + playersList);
+            "There are " + to_string(nbPlayer) +
+            " players online: " + playersList);
       }
 
     } else {
@@ -84,33 +80,16 @@ CommandHandler::CommandListener(CommandHandler* instance)
   }
 }
 
-void
-CommandHandler::initCommandHandler()
-{
+void CommandHandler::initCommandHandler() {
   instance.command_listener_thread.detach();
 }
 
 CommandHandler::CommandHandler()
-  : running(true),
-  command_listener_thread(CommandListener,this)
-{
-}
+    : running(true), command_listener_thread(CommandListener, this) {}
 
-CommandHandler&
-CommandHandler::getInstance()
-{
-  return instance;
-}
+CommandHandler &CommandHandler::getInstance() { return instance; }
 
-void
-CommandHandler::shutdown()
-{
-  this->running = false;
-}
+void CommandHandler::shutdown() { this->running = false; }
 
-bool
-CommandHandler::isRunning() const
-{
-  return this->running;
-}
-}
+bool CommandHandler::isRunning() const { return this->running; }
+} // namespace command

@@ -8,9 +8,7 @@
 #include "server/VanillaMinecraftServer.h"
 using namespace std;
 namespace packet {
-void
-ServerAuthDataPacket::writeData(Buffer& buffer)
-{
+void ServerAuthDataPacket::writeData(Buffer &buffer) {
 
   buffer.writeByte(0xFD);
   /*// Login server Id
@@ -24,8 +22,8 @@ ServerAuthDataPacket::writeData(Buffer& buffer)
 
   // Public key
   buffer.writeBytes(server::VanillaMinecraftServer::getServer()
-                      .getKeyPair()
-                      .getPublicKeychars());
+                        .getKeyPair()
+                        .getPublicKeychars());
   // After you get public key chars from getPublicKeychars():
   // Generate a 4-char verify token
   std::vector<unsigned char> verifyToken(4);
@@ -36,15 +34,10 @@ ServerAuthDataPacket::writeData(Buffer& buffer)
   buffer.writeBytes(verifyToken);
 }
 
-void
-ServerAuthDataPacket::readData(Buffer& buffer)
-{
-}
+void ServerAuthDataPacket::readData(Buffer &buffer) {}
 
-const vector<unsigned char>&
-ServerAuthDataPacket::getVerifyToken() const
-{
+const vector<unsigned char> &ServerAuthDataPacket::getVerifyToken() const {
   return this->verifyToken;
 }
 
-}
+} // namespace packet

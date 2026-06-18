@@ -8,23 +8,24 @@
 #include <vector>
 
 namespace crypto {
-class AESCipher
-{
+class AESCipher {
 public:
-  AESCipher(const std::vector<unsigned char>&);
+  AESCipher(const std::vector<unsigned char> &);
 
-  AESCipher(const AESCipher&);
-  AESCipher& operator=(const AESCipher&);
+  AESCipher(const AESCipher &);
+  AESCipher &operator=(const AESCipher &);
   ~AESCipher();
 
-  void decrypt(const std::vector<unsigned char>&, std::vector<unsigned char>&) const;
+  void decrypt(const std::vector<unsigned char> &,
+               std::vector<unsigned char> &) const;
 
-  void encrypt(const std::vector<unsigned char>&, std::vector<unsigned char>&) const;
+  void encrypt(const std::vector<unsigned char> &,
+               std::vector<unsigned char> &) const;
 
 private:
-  EVP_CIPHER_CTX* decryptCtx;
-  EVP_CIPHER_CTX* encryptCtx;
+  EVP_CIPHER_CTX *decryptCtx;
+  EVP_CIPHER_CTX *encryptCtx;
   std::vector<unsigned char> key;
 };
-}
+} // namespace crypto
 #endif // AESCIPHER_H

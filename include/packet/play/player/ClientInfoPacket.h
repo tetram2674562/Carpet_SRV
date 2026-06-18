@@ -8,12 +8,11 @@
 #include "packet/Packet.h"
 
 namespace packet {
-class ClientInfoPacket : public Packet
-{
+class ClientInfoPacket : public Packet {
 public:
   ClientInfoPacket();
-  void readData(Buffer&);
-  void writeData(Buffer&);
+  void readData(Buffer &);
+  void writeData(Buffer &);
   int getSize();
 
   std::string getLanguage() const;
@@ -36,6 +35,6 @@ private:
   int gameDifficulty;
   bool showCape;
 };
-}
+} // namespace packet
 
 #endif // CLIENTINFOPACKET_H

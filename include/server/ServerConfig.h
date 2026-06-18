@@ -5,8 +5,7 @@
 #ifndef SERVERCONFIG_H
 #define SERVERCONFIG_H
 
-class ServerConfig
-{
+class ServerConfig {
 public:
   ServerConfig();
   int getMaxPlayers() const;

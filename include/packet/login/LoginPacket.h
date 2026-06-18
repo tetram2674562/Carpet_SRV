@@ -7,12 +7,11 @@
 #include <packet/Packet.h>
 
 namespace packet {
-class LoginPacket : public Packet
-{
+class LoginPacket : public Packet {
 public:
-  void writeData(Buffer&);
-  void readData(Buffer&);
+  void writeData(Buffer &);
+  void readData(Buffer &);
 };
-}
+} // namespace packet
 
 #endif // LOGINPACKET_H

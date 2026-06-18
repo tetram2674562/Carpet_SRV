@@ -7,37 +7,29 @@
 using namespace std;
 
 namespace packet {
-void
-SharedKeyPacket::readData(Buffer& buffer)
-{
+void SharedKeyPacket::readData(Buffer &buffer) {
   const std::vector<unsigned char> encryptedSharedSecret = buffer.readBytes();
   const std::vector<unsigned char> encryptedVerifyToken = buffer.readBytes();
 
   this->sharedSecret = server::VanillaMinecraftServer::getServer()
-                         .getKeyPair()
-                         .decryptWithPrivateKey(encryptedSharedSecret);
+                           .getKeyPair()
+                           .decryptWithPrivateKey(encryptedSharedSecret);
   this->verifyToken = server::VanillaMinecraftServer::getServer()
-                        .getKeyPair()
-                        .decryptWithPrivateKey(encryptedVerifyToken);
+                          .getKeyPair()
+                          .decryptWithPrivateKey(encryptedVerifyToken);
 }
 
-void
-SharedKeyPacket::writeData(Buffer& buffer)
-{
+void SharedKeyPacket::writeData(Buffer &buffer) {
   buffer.writeByte(0xFC);
   buffer.writeBytes(vector<unsigned char>());
   buffer.writeBytes(vector<unsigned char>());
 }
-const vector<unsigned char>&
-SharedKeyPacket::getSharedSecret() const
-{
+const vector<unsigned char> &SharedKeyPacket::getSharedSecret() const {
   return this->sharedSecret;
 }
 
-const vector<unsigned char>&
-SharedKeyPacket::getVerifyToken() const
-{
+const vector<unsigned char> &SharedKeyPacket::getVerifyToken() const {
   return this->verifyToken;
 }
 
-}
+} // namespace packet

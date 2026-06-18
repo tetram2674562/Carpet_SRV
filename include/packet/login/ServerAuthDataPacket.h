@@ -6,16 +6,15 @@
 #include "network/Connection.h"
 
 namespace packet {
-class ServerAuthDataPacket : public Packet
-{
+class ServerAuthDataPacket : public Packet {
 public:
-  void writeData(Buffer&);
-  void readData(Buffer&);
+  void writeData(Buffer &);
+  void readData(Buffer &);
 
-  const std::vector<unsigned char>& getVerifyToken() const;
+  const std::vector<unsigned char> &getVerifyToken() const;
 
 private:
   std::vector<unsigned char> verifyToken;
 };
-}
+} // namespace packet
 #endif // SERVERAUTHDATAPACKET_H

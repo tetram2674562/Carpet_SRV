@@ -4,72 +4,54 @@
 
 #include "utils/UTF16String.h"
 #include <iostream>
+#include <ostream>
 #include <string>
 #include <utils/ConsoleUtils.h>
 namespace utils {
-utils::UTF16String::UTF16String()
-  : characters(NULL)
-  , length(0)
-{
-}
+UTF16String::UTF16String() : characters(nullptr), length(0) {}
 
-utils::UTF16String::UTF16String(const std::string& str)
-  : characters(NULL)
-  , length((int)str.size())
-{
+UTF16String::UTF16String(const std::string &str)
+    : characters(nullptr), length((int)str.size()) {
   this->characters = new unsigned short[this->length];
   for (unsigned int i = 0; i < this->length; i++) {
     this->characters[i] = (unsigned char)str[i];
   }
 }
 
-utils::UTF16String::UTF16String(const unsigned short* utf16String, int length)
-  : characters(NULL)
-  , length(length)
-{
+UTF16String::UTF16String(const unsigned short *utf16String, int length)
+    : characters(nullptr), length(length) {
   this->characters = new unsigned short[this->length];
   for (unsigned int i = 0; i < this->length; i++) {
     this->characters[i] = utf16String[i];
   }
 }
 
-utils::UTF16String::UTF16String(const UTF16String& str)
-  : characters(NULL)
-  , length(str.size())
-{
+UTF16String::UTF16String(const UTF16String &str)
+    : characters(nullptr), length(str.size()) {
   this->characters = new unsigned short[this->length];
   for (unsigned int i = 0; i < this->length; i++) {
     this->characters[i] = str[i];
   }
 }
 
-utils::UTF16String::~UTF16String()
-{
-  if (this->characters != NULL) {
+UTF16String::~UTF16String() {
+  if (this->characters != nullptr) {
     delete[] this->characters;
-    this->characters = NULL;
+    this->characters = nullptr;
   }
 }
 
-int
-utils::UTF16String::size() const
-{
-  return length;
-}
+int UTF16String::size() const { return length; }
 
-utils::UTF16String&
-utils::UTF16String::operator+=(const UTF16String& string)
-{
+UTF16String &UTF16String::operator+=(const UTF16String &string) {
   this->append(string);
   return (*this);
 }
 
-void
-utils::UTF16String::append(const utils::UTF16String& string)
-{
+void UTF16String::append(const UTF16String &string) {
   if (string.length != 0) {
-    unsigned short* new_string =
-      new unsigned short[this->length + string.length];
+    unsigned short *new_string =
+        new unsigned short[this->length + string.length];
     for (unsigned int i = 0; i < this->length; i++) {
       new_string[i] = this->characters[i];
     }
@@ -82,11 +64,9 @@ utils::UTF16String::append(const utils::UTF16String& string)
   }
 }
 
-void
-utils::UTF16String::append(int nbr)
-{
-  unsigned short* new_string = new unsigned short[this->length + 1];
-  if (this->characters != NULL) {
+void UTF16String::append(int nbr) {
+  unsigned short *new_string = new unsigned short[this->length + 1];
+  if (this->characters != nullptr) {
     for (unsigned int i = 0; i < this->length; i++) {
       new_string[i] = this->characters[i];
     }
@@ -98,29 +78,21 @@ utils::UTF16String::append(int nbr)
   this->length++;
 }
 
-utils::UTF16String
-utils::UTF16String::operator+(const UTF16String& string) const
-{
+UTF16String UTF16String::operator+(const UTF16String &string) const {
   UTF16String new_string(*this);
   new_string += string;
   return new_string;
 }
 
-unsigned short
-utils::UTF16String::operator[](unsigned int index)
-{
+unsigned short UTF16String::operator[](unsigned int index) {
   return this->characters[index];
 }
 
-const unsigned short
-utils::UTF16String::operator[](unsigned int index) const
-{
+const unsigned short UTF16String::operator[](unsigned int index) const {
   return this->characters[index];
 }
 
-std::string
-utils::UTF16String::toString() const
-{
+std::string UTF16String::toString() const {
   std::string result;
   for (unsigned int i = 0; i < this->length; i++) {
     result += static_cast<char>(this->characters[i]);
@@ -128,37 +100,30 @@ utils::UTF16String::toString() const
   return result;
 }
 
-std::ostream&
-utils::UTF16String::display(std::ostream& outputStream) const
-{
+std::ostream &UTF16String::display(std::ostream &outputStream) const {
   outputStream << toString();
   return outputStream;
 }
 
-std::ostream&
-utils::operator<<(std::ostream& outputStream, const UTF16String& string)
-{
+std::ostream &operator<<(std::ostream &outputStream,
+                         const UTF16String &string) {
   string.display(outputStream);
   return outputStream;
 }
 
-utils::UTF16String
-utils::operator+(const UTF16String& utf16_string,
-                 const UTF16String& utf16_string1)
-{
+UTF16String operator+(const UTF16String &utf16_string,
+                      const UTF16String &utf16_string1) {
   UTF16String utf16_string2(utf16_string);
   return utf16_string2 += utf16_string1;
 }
 
-utils::UTF16String&
-utils::UTF16String::operator=(const UTF16String& string)
-{
+UTF16String &UTF16String::operator=(const UTF16String &string) {
   if (this->length != 0) {
     delete[] this->characters;
-    this->characters = NULL;
+    this->characters = nullptr;
   }
   this->length = string.length;
-  if (string.length != 0 && string.characters != NULL) {
+  if (string.length != 0 && string.characters != nullptr) {
     this->characters = new unsigned short[string.length];
     for (unsigned int i = 0; i < this->length; i++) {
       this->characters[i] = string.characters[i];
@@ -166,4 +131,4 @@ utils::UTF16String::operator=(const UTF16String& string)
   }
   return *this;
 }
-}
+} // namespace utils

@@ -7,19 +7,18 @@
 #include "network/Connection.h"
 
 namespace packet {
-class SharedKeyPacket : public Packet
-{
+class SharedKeyPacket : public Packet {
 public:
-  void readData(Buffer&);
-  void writeData(Buffer&);
+  void readData(Buffer &);
+  void writeData(Buffer &);
 
-  const std::vector<unsigned char>& getSharedSecret() const;
+  const std::vector<unsigned char> &getSharedSecret() const;
 
-  const std::vector<unsigned char>& getVerifyToken() const;
+  const std::vector<unsigned char> &getVerifyToken() const;
 
 private:
   std::vector<unsigned char> sharedSecret;
   std::vector<unsigned char> verifyToken;
 };
-}
+} // namespace packet
 #endif // SHAREDKEYPACKET_H

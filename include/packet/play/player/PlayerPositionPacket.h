@@ -8,14 +8,13 @@
 #include "world/Location.h"
 
 namespace packet {
-class PlayerPositionPacket : public Packet
-{
+class PlayerPositionPacket : public Packet {
 public:
-  PlayerPositionPacket(const world::Location&, double, bool);
+  PlayerPositionPacket(const world::Location &, double, bool);
   PlayerPositionPacket();
 
-  void readData(Buffer&);
-  void writeData(Buffer&);
+  void readData(Buffer &);
+  void writeData(Buffer &);
   double getX() const;
 
   double getY() const;
@@ -31,5 +30,5 @@ private:
   double stance;
   bool onGround;
 };
-}
+} // namespace packet
 #endif // PLAYERPOSITIONPACKET_H

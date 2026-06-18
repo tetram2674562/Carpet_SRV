@@ -10,33 +10,25 @@ using namespace std;
 namespace utils {
 ConsoleUtils ConsoleUtils::instance;
 
-void
-ConsoleUtils::printMessage(const std::string& message)
-{
+void ConsoleUtils::printMessage(const std::string &message) {
   consoleMutex.lock();
   std::cout << message << std::endl;
   consoleMutex.unlock();
 }
 
-void
-ConsoleUtils::printerr(const std::string& error)
-{
+void ConsoleUtils::printerr(const std::string &error) {
   consoleMutex.lock();
   std::cerr << error << std::endl;
   consoleMutex.unlock();
 }
 
-void
-ConsoleUtils::getLine(string& variable)
-{
+void ConsoleUtils::getLine(string &variable) {
   inputMutex.lock();
   std::getline(std::cin, variable);
   inputMutex.unlock();
 }
 
-UTF16String
-ConsoleUtils::createUTF16String(const std::string& msg)
-{
+UTF16String ConsoleUtils::createUTF16String(const std::string &msg) {
   UTF16String us;
 
   for (int i = 0; i < msg.length(); i++) {
@@ -46,11 +38,7 @@ ConsoleUtils::createUTF16String(const std::string& msg)
   return us;
 }
 
-ConsoleUtils&
-ConsoleUtils::getInstance()
-{
-  return instance;
-}
+ConsoleUtils &ConsoleUtils::getInstance() { return instance; }
 
 ConsoleUtils::ConsoleUtils() {}
-}
+} // namespace utils

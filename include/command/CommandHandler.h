@@ -6,14 +6,13 @@
 #include <thread>
 
 namespace command {
-class CommandHandler
-{
+class CommandHandler {
 public:
   bool isRunning() const;
-  static void CommandListener(CommandHandler*);
+  static void CommandListener(CommandHandler *);
   static void initCommandHandler();
   void shutdown();
-  static CommandHandler& getInstance();
+  static CommandHandler &getInstance();
 
 private:
   CommandHandler();
@@ -21,5 +20,5 @@ private:
   static CommandHandler instance;
   std::thread command_listener_thread;
 };
-}
+} // namespace command
 #endif // COMMANDHANDLER_H
