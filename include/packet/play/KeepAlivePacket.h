@@ -7,11 +7,14 @@
 #include "packet/Packet.h"
 
 namespace packet {
-class KeepAlivePacket : public Packet
-{
+class KeepAlivePacket : public Packet {
 public:
-  void writeData(Buffer&);
-  void readData(Buffer&);
+  KeepAlivePacket();
+  KeepAlivePacket(int milliseconds);
+  void writeData(Buffer &);
+  void readData(Buffer &);
+private:
+  int milliseconds;
 };
-}
+} // namespace packet
 #endif // KEEPALIVEPACKET_H

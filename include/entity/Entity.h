@@ -6,8 +6,7 @@
 #include "world/Location.h"
 
 namespace entity {
-class Entity
-{
+class Entity {
 public:
   Entity();
   virtual ~Entity(){};
@@ -19,5 +18,5 @@ protected:
   world::Location location;
 };
 
-}
+} // namespace entity
 #endif // ENTITY_H

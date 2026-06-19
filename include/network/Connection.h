@@ -6,58 +6,100 @@
 
 #include <ctime>
 
-#include "utils/Mutex.h"
+#include "crypto/AESCipher.h"
+#include "packet/play/KeepAlivePacket.h"
+#include "utils/ConsoleUtils.h"
+#include "utils/UTF16String.h"
+#include <map>
 #include <packet/Packet.h>
 #include <vector>
 
-#include "crypto/AESCipher.h"
-#include "packet/handshake/ServerPingPacket.h"
-#include "utils/Queue.h"
-#include "utils/UTF16String.h"
+#include <asio.hpp>
 
 namespace entity {
 class Player;
 }
 
 namespace network {
-class Connection
-{
+class Connection : public std::enable_shared_from_this<Connection> {
 public:
-  Connection(int, entity::Player&);
+  typedef std::shared_ptr<Connection> pointer;
 
+  static pointer create(asio::io_context &io_context);
   ~Connection();
 
-  void addPacketToQueue(packet::Packet*);
+  // NO COPY
+  Connection(const Connection &) = delete;
+  Connection &operator=(const Connection &) = delete;
 
-  void sendAndFlushQueue();
+  /**
+   * \brief Allow you to add packet to be send to the connection
+   */
+  void addPacketToQueue(packet::Packet *);
 
-  bool handleConnection(entity::Player&);
-  void handlePackets();
-  bool isAlive();
-  void disconnect(const utils::UTF16String&);
+  void handleConnection(entity::Player &);
 
-  void handlePacket(packet::Buffer& buffer);
+  bool isAlive() const;
+  void disconnect(const utils::UTF16String &);
+  void disconnect();
 
-  void handlePacket(packet::ServerPingPacket& packet);
+  // Read tcp
+  void start_read();
+  void handle_read(const asio::error_code &error, std::size_t);
+  void process_packets(size_t size);
+
+  // Write tcp
+  void start_write();
+  void handle_write(const asio::error_code &error, std::size_t);
+  asio::ip::tcp::socket &socket();
+  void sendKeepAlive();
+
+  enum Status { HANDSHAKE, LOGIN, PLAY, PING };
 
 private:
-  // NO COPY
-  Connection(const Connection&);
-  Connection& operator=(const Connection&);
+  Connection(asio::io_context &);
 
-  int client_FD;
-  packet::Buffer dataBuffer;
+  // Socket
+  asio::ip::tcp::socket socket_;
+  std::atomic_bool running;
+  std::atomic_bool mustDisconnect;
+  // Buffers
+  packet::Buffer writeBuffer;
+  packet::Buffer readBuffer;
+  // Cryptographic cipher AES128
+  crypto::AESCipher *cipher;
+  mutable std::mutex cipherMutex;
 
-  utils::Queue<packet::Packet*> queue;
-  utils::Mutex queueMutex;
+  // Packet queue
+  std::vector<packet::Packet *> queue;
+  std::mutex queueMutex;
+  std::atomic<bool> isWriting;
 
-  utils::Mutex stateMutex;
+  std::mutex stateMutex;
   std::time_t lastActivity;
-  crypto::AESCipher* cipher;
-  entity::Player* player;
+  entity::Player *player;
 
-  bool performLoginSequence();
-  bool recvPacket(std::vector<unsigned char>&);
+  // Verify token for crypto
+  std::vector<unsigned char> verifyToken;
+
+
+  int counter;
+
+  // Status of the connection
+  Status status;
+
+  // Handlers
+  void handleServerPingPacket(); // 0xFE
+  void handleHandshake();        // 0x02
+  void handleSharedKeyPacket();  // 0xFC
+  void handleClientInfo();       // 0xCC
+  void handleKeepAlive();        // 0x00
+  void handlePositionPacket();   // 0x0B
+
+  typedef void (Connection::*PacketHandler)();
+
+  static const std::map<unsigned char, PacketHandler> PACKETS_HANDLERS;
+  void performLoginSequence();
 };
-}
+} // namespace network
 #endif // CONNECTION_H

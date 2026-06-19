@@ -6,8 +6,7 @@
 #define LOCATION_H
 
 namespace world {
-class Location
-{
+class Location {
 public:
   Location(double = 0., double = 0., double = 0.);
   double getX() const;
@@ -22,5 +21,5 @@ private:
   double y;
   double z;
 };
-}
+} // namespace world
 #endif // LOCATION_H

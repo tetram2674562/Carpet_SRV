@@ -8,15 +8,14 @@
 #include "utils/UTF16String.h"
 
 namespace packet {
-class KickPacket : public Packet
-{
+class KickPacket : public Packet {
 public:
-  KickPacket(const utils::UTF16String&);
-  void writeData(Buffer&);
-  void readData(Buffer&);
+  KickPacket(const utils::UTF16String &);
+  void writeData(Buffer &);
+  void readData(Buffer &);
 
 private:
   utils::UTF16String reason;
 };
-}
+} // namespace packet
 #endif // KICKPACKET_H

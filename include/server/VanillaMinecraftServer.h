@@ -6,52 +6,53 @@
 #include "crypto/KeyPair.h"
 #include "entity/player/Player.h"
 #include "utils/ConsoleUtils.h"
-#include "utils/ThreadUtils.h"
+#include <asio.hpp>
+#include <tbb/tbb.h>
 #define PORT 25565
 #define TICK_RATE 20
 
 namespace server {
 const int TICK_INTERVAL_MS = 1000 / TICK_RATE;
-class VanillaMinecraftServer
-{
-  // TODO Sort this.
+class VanillaMinecraftServer {
+
 public:
   static void startServer();
-  static VanillaMinecraftServer& getServer();
-
-  static void handleClient(int);
+  static VanillaMinecraftServer &getServer();
 
   void tick();
-
-  static void* ServerThread(void*);
 
   void shutdown();
   bool isRunning();
 
-  void requestKickPlayer(const entity::Player*, const utils::UTF16String&);
+  void requestKickPlayer(const entity::Player *, const utils::UTF16String &);
 
-  std::vector<entity::Player*>& getPlayers();
+  std::vector<entity::Player *> &getPlayers();
 
-  crypto::KeyPair& getKeyPair();
-  int getServerSocket() const;
+  /// Function to get the keypair
+  crypto::KeyPair &getKeyPair();
 
-  void setServerSocket(int);
+  std::mutex &getPlayersMutex();
 
-  utils::Mutex& getPlayersMutex();
+  void start_accept();
+  void handle_accept(const network::Connection::pointer &new_connection,
+                     const std::error_code &error);
 
 private:
-  VanillaMinecraftServer();
+  VanillaMinecraftServer(asio::io_context &);
 
-  utils::Thread serverThread;
   crypto::KeyPair keypair;
-  static VanillaMinecraftServer server;
-  bool running;
-  int server_socket;
-  std::vector<entity::Player*> players;
+  static VanillaMinecraftServer *server;
+  std::atomic<bool> running;
+
+  // Asio networking stuff
+  asio::io_context &io_context_;
+  asio::ip::tcp::acceptor acceptor_;
+
+  std::vector<entity::Player *> players;
   std::vector<int> usedIDs;
-  utils::Mutex playersMutex;
+  std::mutex playersMutex;
   int maxPlayers;
-  utils::Mutex serverStateMutex;
+  std::mutex serverStateMutex;
 };
-}
+} // namespace server
 #endif // VANILLAMINECRAFTSERVER_H

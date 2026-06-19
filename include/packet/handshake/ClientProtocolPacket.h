@@ -7,11 +7,10 @@
 #include "packet/Packet.h"
 
 namespace packet {
-class ClientProtocolPacket : public Packet
-{
+class ClientProtocolPacket : public Packet {
 public:
-  void readData(Buffer&);
-  void writeData(Buffer&);
+  void readData(Buffer &);
+  void writeData(Buffer &);
 
   ClientProtocolPacket();
 
@@ -28,5 +27,5 @@ private:
   int serverPort;
   int packetId;
 };
-}
+} // namespace packet
 #endif // CLIENTPROTOCOLPACKET_H

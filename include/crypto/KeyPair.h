@@ -8,8 +8,7 @@
 #include <string>
 #include <vector>
 namespace crypto {
-class KeyPair
-{
+class KeyPair {
 public:
   KeyPair(int bits = 2048);
 
@@ -21,15 +20,15 @@ public:
   std::string getPrivateKeyPEM() const;
   std::string getPublicKeyPEM() const;
 
-  std::vector<unsigned char> decryptWithPrivateKey(
-    const std::vector<unsigned char>&) const;
-
-private:
-  EVP_PKEY* keypair;
+  std::vector<unsigned char>
+  decryptWithPrivateKey(const std::vector<unsigned char> &) const;
 
   // NO COPY ALLOWED AS IT COULD MESS WITH THE SERVER.
-  KeyPair(const KeyPair&);
-  KeyPair& operator=(const KeyPair&);
+  KeyPair(const KeyPair &) = delete;
+  KeyPair &operator=(const KeyPair &) = delete;
+private:
+  EVP_PKEY *keypair;
+
 };
-}
+} // namespace crypto
 #endif // KEYPAIR_H

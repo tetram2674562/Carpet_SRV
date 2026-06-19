@@ -7,18 +7,17 @@
 #include "packet/Packet.h"
 
 namespace packet {
-class ServerPingPacket : public Packet
-{
+class ServerPingPacket : public Packet {
 public:
   ServerPingPacket(unsigned char);
   ServerPingPacket();
-  ServerPingPacket(Buffer&);
-  void readData(Buffer&);
-  void writeData(Buffer&);
+  ServerPingPacket(Buffer &);
+  void readData(Buffer &);
+  void writeData(Buffer &);
   unsigned char getPing() const;
 
 private:
   unsigned char ping;
 };
-}
+} // namespace packet
 #endif // SERVERPINGPACKET_H

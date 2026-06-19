@@ -6,12 +6,21 @@
 #include <stdexcept>
 
 #include "server/VanillaMinecraftServer.h"
+
+#include <iostream>
 using namespace std;
 namespace packet {
-void
-ServerAuthDataPacket::writeData(Buffer& buffer)
-{
 
+ServerAuthDataPacket::ServerAuthDataPacket() {
+  std::vector<unsigned char> verifyToken(4);
+  // Generate a 4-char verify token
+  if (RAND_bytes(verifyToken.data(), 4) != 1) {
+    throw std::runtime_error("RAND_chars failed");
+  }
+  this->verifyToken = verifyToken;
+}
+
+void ServerAuthDataPacket::writeData(Buffer &buffer) {
   buffer.writeByte(0xFD);
   /*// Login server Id
   std::random_device rd;
@@ -24,27 +33,16 @@ ServerAuthDataPacket::writeData(Buffer& buffer)
 
   // Public key
   buffer.writeBytes(server::VanillaMinecraftServer::getServer()
-                      .getKeyPair()
-                      .getPublicKeychars());
+                        .getKeyPair()
+                        .getPublicKeychars());
   // After you get public key chars from getPublicKeychars():
-  // Generate a 4-char verify token
-  std::vector<unsigned char> verifyToken(4);
-  if (RAND_bytes(&verifyToken[0], verifyToken.size()) != 1) {
-    throw std::runtime_error("RAND_chars failed");
-  }
-  this->verifyToken = verifyToken;
   buffer.writeBytes(verifyToken);
 }
 
-void
-ServerAuthDataPacket::readData(Buffer& buffer)
-{
-}
+void ServerAuthDataPacket::readData(Buffer &buffer) {}
 
-const vector<unsigned char>&
-ServerAuthDataPacket::getVerifyToken() const
-{
+const vector<unsigned char> &ServerAuthDataPacket::getVerifyToken() const {
   return this->verifyToken;
 }
 
-}
+} // namespace packet

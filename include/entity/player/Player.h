@@ -14,45 +14,37 @@ class Connection;
 }
 
 namespace entity {
-class Player : public Entity
-{
+class Player : public Entity {
 public:
-  Player(int);
-
+  Player(const network::Connection::pointer &);
   virtual void update();
 
-  void kickPlayer(const utils::UTF16String&);
+  void kickPlayer(const utils::UTF16String &);
 
-  bool handleConnection();
+  void handleConnection();
+  network::Connection &getConnection();
 
   std::string getName() const;
-
-  network::Connection& getConnection();
-
-  void setUsername(const std::string&);
+  void setUsername(const std::string &);
 
   std::string getLanguage() const;
-
-  void setLanguage(const std::string&);
+  void setLanguage(const std::string &);
 
   int getRenderDistance() const;
-
   void setRenderDistance(int);
 
   bool getShowCape() const;
-
   void setShowCape(bool);
 
-  virtual void setPosition(double, double, double);
-
-  virtual world::Location getLocation() const;
+  void setPosition(double, double, double);
+  world::Location getLocation() const;
 
 private:
   std::string name;
-  network::Connection connection;
+  network::Connection::pointer connection;
   std::string language;
   int renderDistance;
   bool showCape;
 };
-}
+} // namespace entity
 #endif // PLAYER_H
