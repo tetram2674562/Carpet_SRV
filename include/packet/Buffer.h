@@ -10,8 +10,6 @@
 #include <string>
 #include <vector>
 
-#include <queue>
-
 namespace packet {
 class Buffer {
 public:
@@ -60,6 +58,7 @@ public:
   void decrypt(const crypto::AESCipher &);
 
   size_t read_pos() const;
+  void writeBool(bool val);
 
 private:
   std::vector<unsigned char> data;

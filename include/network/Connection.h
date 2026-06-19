@@ -7,6 +7,7 @@
 #include <ctime>
 
 #include "crypto/AESCipher.h"
+#include "packet/play/KeepAlivePacket.h"
 #include "utils/ConsoleUtils.h"
 #include "utils/UTF16String.h"
 #include <map>
@@ -25,6 +26,7 @@ public:
   typedef std::shared_ptr<Connection> pointer;
 
   static pointer create(asio::io_context &io_context);
+  ~Connection();
 
   // NO COPY
   Connection(const Connection &) = delete;
@@ -39,6 +41,7 @@ public:
 
   bool isAlive() const;
   void disconnect(const utils::UTF16String &);
+  void disconnect();
 
   // Read tcp
   void start_read();
@@ -49,6 +52,7 @@ public:
   void start_write();
   void handle_write(const asio::error_code &error, std::size_t);
   asio::ip::tcp::socket &socket();
+  void sendKeepAlive();
 
   enum Status { HANDSHAKE, LOGIN, PLAY, PING };
 
@@ -64,6 +68,7 @@ private:
   packet::Buffer readBuffer;
   // Cryptographic cipher AES128
   crypto::AESCipher *cipher;
+  mutable std::mutex cipherMutex;
 
   // Packet queue
   std::vector<packet::Packet *> queue;
@@ -76,6 +81,9 @@ private:
 
   // Verify token for crypto
   std::vector<unsigned char> verifyToken;
+
+
+  int counter;
 
   // Status of the connection
   Status status;

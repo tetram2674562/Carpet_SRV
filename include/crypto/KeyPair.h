@@ -23,12 +23,12 @@ public:
   std::vector<unsigned char>
   decryptWithPrivateKey(const std::vector<unsigned char> &) const;
 
+  // NO COPY ALLOWED AS IT COULD MESS WITH THE SERVER.
+  KeyPair(const KeyPair &) = delete;
+  KeyPair &operator=(const KeyPair &) = delete;
 private:
   EVP_PKEY *keypair;
 
-  // NO COPY ALLOWED AS IT COULD MESS WITH THE SERVER.
-  KeyPair(const KeyPair &);
-  KeyPair &operator=(const KeyPair &);
 };
 } // namespace crypto
 #endif // KEYPAIR_H

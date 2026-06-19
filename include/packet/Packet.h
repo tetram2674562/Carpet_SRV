@@ -4,7 +4,6 @@
 
 #ifndef PACKET_H
 #define PACKET_H
-#include <cstddef>
 
 #include "Buffer.h"
 namespace packet {

@@ -6,7 +6,7 @@
 #define PLAYERPOSITIONPACKET_H
 #include "packet/Packet.h"
 #include "world/Location.h"
-
+#include "packet/Buffer.h"
 namespace packet {
 class PlayerPositionPacket : public Packet {
 public:
@@ -27,6 +27,8 @@ public:
 
 private:
   world::Location location;
+  float yaw;
+  float pitch;
   double stance;
   bool onGround;
 };

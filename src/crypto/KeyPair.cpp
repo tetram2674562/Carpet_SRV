@@ -37,16 +37,6 @@ KeyPair::~KeyPair() {
     EVP_PKEY_free(keypair);
 }
 
-KeyPair::KeyPair(const KeyPair &keypair) { this->keypair = keypair.keypair; }
-
-KeyPair &KeyPair::operator=(const KeyPair &keypair) {
-  if (this->keypair) {
-    EVP_PKEY_free(this->keypair);
-    this->keypair = nullptr;
-  }
-  this->keypair = keypair.keypair;
-  return *this;
-}
 
 vector<unsigned char> KeyPair::getPrivateKeychars() const {
   int len = i2d_PrivateKey(keypair, nullptr);
@@ -108,10 +98,10 @@ std::vector<unsigned char> KeyPair::decryptWithPrivateKey(
   if (EVP_PKEY_decrypt_init(ctx) <= 0)
     throw std::runtime_error("EVP_PKEY_decrypt_init failed");
 
-  size_t outlen;
+  size_t outlen = 0;
   if (EVP_PKEY_decrypt(
           ctx, nullptr, &outlen,
-          reinterpret_cast<const unsigned char *>(encrypted.data()),
+          encrypted.data(),
           encrypted.size()) <= 0) {
     EVP_PKEY_CTX_free(ctx);
     throw std::runtime_error("Failed to determine decrypted length");
@@ -124,8 +114,8 @@ std::vector<unsigned char> KeyPair::decryptWithPrivateKey(
     throw std::runtime_error("EVP_PKEY_decrypt failed");
   }
 
-  EVP_PKEY_CTX_free(ctx);
   decrypted.resize(outlen);
+  EVP_PKEY_CTX_free(ctx);
   return decrypted;
 }
 

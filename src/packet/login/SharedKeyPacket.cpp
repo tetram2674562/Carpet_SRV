@@ -4,6 +4,8 @@
 #include "server/VanillaMinecraftServer.h"
 #include <packet/login/SharedKeyPacket.h>
 
+#include <iostream>
+
 using namespace std;
 
 namespace packet {

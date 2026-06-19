@@ -9,8 +9,12 @@
 namespace packet {
 class KeepAlivePacket : public Packet {
 public:
+  KeepAlivePacket();
+  KeepAlivePacket(int milliseconds);
   void writeData(Buffer &);
   void readData(Buffer &);
+private:
+  int milliseconds;
 };
 } // namespace packet
 #endif // KEEPALIVEPACKET_H

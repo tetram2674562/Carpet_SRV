@@ -12,8 +12,8 @@ class AESCipher {
 public:
   AESCipher(const std::vector<unsigned char> &);
 
-  AESCipher(const AESCipher &);
-  AESCipher &operator=(const AESCipher &);
+  AESCipher(const AESCipher &) = delete;
+  AESCipher &operator=(const AESCipher &) = delete;
   ~AESCipher();
 
   void decrypt(const std::vector<unsigned char> &,

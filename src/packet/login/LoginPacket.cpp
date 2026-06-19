@@ -2,6 +2,8 @@
 // Created by tetram26 on 31/07/25.
 //
 #include <packet/login/LoginPacket.h>
+
+#include <iostream>
 using namespace std;
 
 namespace packet {

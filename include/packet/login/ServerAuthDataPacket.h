@@ -8,6 +8,7 @@
 namespace packet {
 class ServerAuthDataPacket : public Packet {
 public:
+  ServerAuthDataPacket();
   void writeData(Buffer &);
   void readData(Buffer &);
 

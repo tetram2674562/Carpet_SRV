@@ -203,11 +203,18 @@ int Buffer::readInt() {
 
 bool Buffer::readBool() { return readByte() != 0; }
 void Buffer::encrypt(const crypto::AESCipher &cipher) {
-  cipher.encrypt(decryptedData, data);
+  decryptedData.clear();
+  cipher.encrypt(data, decryptedData);
+  data.swap(decryptedData);
 }
 void Buffer::decrypt(const crypto::AESCipher &cipher) {
+  decryptedData.clear();
   cipher.decrypt(data, decryptedData);
+  data.swap(decryptedData);
 }
 size_t Buffer::read_pos() const { return readPos; }
+void Buffer::writeBool(bool val) {
+  writeByte(val == true ? 1 : 0);
+}
 
 } // namespace packet

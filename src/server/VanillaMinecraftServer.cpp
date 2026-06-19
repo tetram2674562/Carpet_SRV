@@ -8,6 +8,7 @@
 
 #include "command/CommandHandler.h"
 #include "network/Connection.h"
+#include "packet/play/KeepAlivePacket.h"
 #include "utils/ConsoleUtils.h"
 using namespace std;
 using namespace utils;
@@ -116,6 +117,7 @@ void VanillaMinecraftServer::tick() {
       players.erase(players.begin() + i);
     } else {
       ++i;
+      player->getConnection().sendKeepAlive();
     }
   }
 }
