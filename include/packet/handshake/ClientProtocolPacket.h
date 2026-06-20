@@ -25,7 +25,6 @@ private:
   std::string username;
   std::string serverHost;
   int serverPort;
-  int packetId;
 };
 } // namespace packet
 #endif // CLIENTPROTOCOLPACKET_H

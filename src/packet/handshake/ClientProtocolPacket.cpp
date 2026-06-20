@@ -8,7 +8,7 @@ using namespace std;
 namespace packet {
 
 ClientProtocolPacket::ClientProtocolPacket()
-    : protocolVersion(-1), serverPort(-1), packetId(0x02) {}
+    : protocolVersion(-1), serverPort(-1) {}
 int ClientProtocolPacket::getProtocolVersion() const {
   return this->protocolVersion;
 }

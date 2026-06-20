@@ -8,6 +8,7 @@
 #include "packet/handshake/ClientProtocolPacket.h"
 #include "packet/handshake/KickPacket.h"
 #include "packet/handshake/ServerPingPacket.h"
+#include "packet/login/ClientStatusPacket.h"
 #include "packet/login/LoginPacket.h"
 #include "packet/login/ServerAuthDataPacket.h"
 #include "packet/login/SharedKeyPacket.h"
@@ -34,6 +35,7 @@ const std::map<unsigned char, Connection::PacketHandler>
         {0xCC, &Connection::handleClientInfo},
         {0x00, &Connection::handleKeepAlive},
         {0x0B, &Connection::handlePositionPacket},
+        {0xCD,&Connection::handleClientStatus},
     };
 
 Connection::Connection(asio::io_context &io_context)
@@ -112,9 +114,7 @@ void Connection::disconnect() {
 }
 
 void Connection::start_read() {
-  if (readBuffer.read_pos() >= readBuffer.size()) {
-    readBuffer.clearBuffer();
-  }
+  readBuffer.clearBuffer();
 
   socket_.async_read_some(readBuffer.mutableBuffer(),
                           std::bind(&Connection::handle_read,
@@ -172,10 +172,6 @@ void Connection::start_write() {
       it = queue.erase(it);
     }
   }
-  std::cout << "Sent: ";
-  for (auto b : writeBuffer.getDataBuffer())
-    printf("%02X ", b);
-  printf("\n");
   {
     if (cipher != nullptr) {
       lock_guard ciphLock(cipherMutex);
@@ -205,7 +201,7 @@ void Connection::handle_write(const asio::error_code &error, std::size_t size) {
 asio::ip::tcp::socket &Connection::socket() { return socket_; }
 void Connection::sendKeepAlive() {
   if (status == PLAY) {
-    //addPacketToQueue(new packet::KeepAlivePacket(++counter));
+    addPacketToQueue(new packet::KeepAlivePacket(++counter));
   }
   if (time(nullptr) - lastActivity > 20) {
     status == PLAY ? disconnect(UTF16String("Timed out")) : disconnect();
@@ -251,22 +247,21 @@ void Connection::handleHandshake() {
 }
 void Connection::handleSharedKeyPacket() {
   if (status == LOGIN) {
-    packet::SharedKeyPacket sharedKeyPacket;
-    sharedKeyPacket.readData(readBuffer);
-    if (verifyToken != sharedKeyPacket.getVerifyToken()) {
+    packet::SharedKeyPacket* sharedKeyPacket = new packet::SharedKeyPacket;
+    sharedKeyPacket->readData(readBuffer);
+    if (verifyToken != sharedKeyPacket->getVerifyToken()) {
       disconnect();
       ConsoleUtils::getInstance().printMessage(
           "Expected the exact same verify token");
     }
+    vector<unsigned char> val = sharedKeyPacket->getSharedSecret();
+
+
+    addPacketToQueue(sharedKeyPacket);
     {
       lock_guard ciphLock(cipherMutex);
-      this->cipher = new crypto::AESCipher(sharedKeyPacket.getSharedSecret());
+      this->cipher = new crypto::AESCipher(val);
     }
-    auto *loginPacket = new packet::LoginPacket;
-    addPacketToQueue(loginPacket);
-    addPacketToQueue(new packet::SpawnPointPacket(0,0,0));
-    addPacketToQueue(new packet::PlayerPositionPacket);
-    status = PLAY;
   }
 }
 
@@ -289,6 +284,18 @@ void Connection::handlePositionPacket() {
   if (player) {
     player->setPosition(positionPacket.getX(), positionPacket.getY(),
                         positionPacket.getZ());
+  }
+}
+
+void Connection::handleClientStatus() {
+  packet::ClientStatusPacket statusPacket;
+  statusPacket.readData(readBuffer);
+
+  if (statusPacket.getStatus() == 0) {
+    status = PLAY;
+    auto *loginPacket = new packet::LoginPacket;
+    addPacketToQueue(loginPacket);
+    addPacketToQueue(new packet::SpawnPointPacket(0,0,0));
   }
 }
 
