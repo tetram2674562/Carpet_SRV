@@ -3,6 +3,7 @@ packet::PlayerAbilitiesPacket::PlayerAbilitiesPacket()
     : invulnerable(false), flying(false), allowFlying(true),
       creativeMode(true), flySpeed(10), walkSpeed(10) {}
 void packet::PlayerAbilitiesPacket::writeData(Buffer &buffer) {
+  buffer.writeByte(0xCA);
   int i = 0;
   if (invulnerable)
     i |= 1;
