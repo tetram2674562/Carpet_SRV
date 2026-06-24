@@ -14,6 +14,7 @@
 #include "packet/login/SharedKeyPacket.h"
 #include "packet/play/KeepAlivePacket.h"
 #include "packet/play/player/ClientInfoPacket.h"
+#include "packet/play/player/PlayerAbilitiesPacket.h"
 #include "packet/play/player/PlayerPositionPacket.h"
 #include "packet/play/player/SpawnPointPacket.h"
 #include "utils/ConsoleUtils.h"
@@ -294,6 +295,7 @@ void Connection::handleClientStatus() {
     auto *loginPacket = new packet::LoginPacket;
     addPacketToQueue(loginPacket);
     addPacketToQueue(new packet::SpawnPointPacket(0,0,0));
+    addPacketToQueue(new packet::PlayerAbilitiesPacket);
   }
 }
 
