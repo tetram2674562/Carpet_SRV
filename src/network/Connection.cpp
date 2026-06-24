@@ -114,7 +114,9 @@ void Connection::disconnect() {
 }
 
 void Connection::start_read() {
-  readBuffer.clearBuffer();
+  if (readBuffer.read_pos() >= readBuffer.size()) {
+    readBuffer.clearBuffer();
+  }
 
   socket_.async_read_some(readBuffer.mutableBuffer(),
                           std::bind(&Connection::handle_read,
@@ -123,37 +125,33 @@ void Connection::start_read() {
 }
 
 void Connection::handle_read(const asio::error_code &error, std::size_t size) {
-  if (!error) {
-    {
-      if (cipher != nullptr) {
-        lock_guard ciphLock(cipherMutex);
-        readBuffer.decrypt(*cipher);
-      }
+  if (!error && size > 0) {
+    if (cipher != nullptr) {
+      lock_guard ciphLock(cipherMutex);
+      unsigned char* newBytesPtr = readBuffer.getDataBuffer().data() + readBuffer.read_pos();
+      cipher->decrypt(newBytesPtr, newBytesPtr, size);
     }
-    process_packets(size);
+
+    process_packets(readBuffer.read_pos() + size);
     start_read();
   }
 }
-
 void Connection::process_packets(const size_t size) {
   try {
     while (readBuffer.read_pos() < size) {
-      if (readBuffer.read_pos() >= readBuffer.size())
-        break;
-
       unsigned char packetId = readBuffer.readByte();
 
       auto it = PACKETS_HANDLERS.find(packetId);
       if (it != PACKETS_HANDLERS.end()) {
         (this->*it->second)();
       } else {
-        ConsoleUtils::getInstance().printerr("Unknown packet id: " +
-                                             std::to_string(packetId));
-
+        std::stringstream ss;
+        ss << "Unknown packet id: 0x" << std::hex << (int)packetId;
+        ConsoleUtils::getInstance().printerr(ss.str());
         break;
       }
     }
-  } catch (const std::runtime_error &) {
+  } catch (const std::runtime_error &e) {
     readBuffer.clearBuffer();
   }
 }

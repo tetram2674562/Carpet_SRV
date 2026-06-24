@@ -15,6 +15,8 @@ public:
   AESCipher(const AESCipher &) = delete;
   AESCipher &operator=(const AESCipher &) = delete;
   ~AESCipher();
+  void decrypt(const unsigned char *encryptedVal, unsigned char *decrpytedVal,
+               size_t length) const;
 
   void decrypt(const std::vector<unsigned char> &,
                std::vector<unsigned char> &) const;

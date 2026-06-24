@@ -42,6 +42,20 @@ AESCipher::~AESCipher() {
   CRYPTO_cleanup_all_ex_data();
 }
 
+void AESCipher::decrypt(const unsigned char* encryptedVal, unsigned char* decrpytedVal,
+                        const size_t length) const {
+  if (!decryptCtx)
+    throw std::runtime_error("decryptCtx is null!");
+  int outlen = 0;
+  if (EVP_DecryptUpdate(decryptCtx, decrpytedVal, &outlen,
+                        encryptedVal,
+                        length) != 1) {
+    throw std::runtime_error("AES decryption failed");
+                        }
+}
+
+
+
 void AESCipher::decrypt(const std::vector<unsigned char> &encryptedData,
                         std::vector<unsigned char> &decryptedData) const {
   if (!decryptCtx)
