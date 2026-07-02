@@ -44,6 +44,7 @@ public:
 
   void writeUTF16Char(unsigned short);
   void writeUTF16String(const utils::UTF16String &);
+  utils::UTF16String readUTF16String();
 
   std::vector<unsigned char> readBytes();
   void writeBytes(const std::vector<unsigned char> &);
@@ -59,6 +60,8 @@ public:
 
   size_t read_pos() const;
   void writeBool(bool val);
+  void writeLong(long value);
+  short readUTF16Char();
 
 private:
   std::vector<unsigned char> data;

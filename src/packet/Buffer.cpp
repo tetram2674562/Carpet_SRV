@@ -153,7 +153,7 @@ void Buffer::writeDouble(double number) {
 }
 
 void Buffer::writeUTF16Char(unsigned short ch) {
-  this->data.push_back(static_cast<unsigned char>(ch >> 8)); // high char
+  this->data.push_back(static_cast<unsigned char>(ch >> 8));
   this->data.push_back(static_cast<unsigned char>(ch & 0xFF));
 }
 
@@ -164,6 +164,17 @@ void Buffer::writeUTF16String(const utils::UTF16String &str) {
     writeUTF16Char(str[i]);
   }
 }
+
+utils::UTF16String Buffer::readUTF16String() {
+  short len = readShort();
+
+  utils::UTF16String string;
+  for (int i = 0; i < len; ++i) {
+    string += readUTF16Char();
+  }
+  return string;
+}
+
 
 vector<unsigned char> Buffer::readBytes() {
   const int16_t len = readShort();
@@ -215,6 +226,15 @@ void Buffer::decrypt(const crypto::AESCipher &cipher) {
 size_t Buffer::read_pos() const { return readPos; }
 void Buffer::writeBool(bool val) {
   writeByte(val == true ? 1 : 0);
+}
+void Buffer::writeLong(long value) {
+  writeInt(static_cast<int32_t>(value >> 32));
+  writeInt(static_cast<int32_t>(value));
+}
+short Buffer::readUTF16Char() {
+  return
+       (static_cast<std::uint16_t>(data[readPos++]) << 8) |
+       static_cast<std::uint16_t>(data[readPos++]);
 }
 
 } // namespace packet

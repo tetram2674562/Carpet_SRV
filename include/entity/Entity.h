@@ -9,7 +9,7 @@ namespace entity {
 class Entity {
 public:
   Entity();
-  virtual ~Entity(){};
+  virtual ~Entity()= default;
   virtual void update() = 0;
   virtual world::Location getLocation() const;
   virtual void setPosition(double, double, double);

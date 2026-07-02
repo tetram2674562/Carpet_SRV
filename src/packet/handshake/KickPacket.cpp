@@ -3,8 +3,11 @@
 //
 
 #include "packet/handshake/KickPacket.h"
+
+#include "utils/ConsoleUtils.h"
 using namespace std;
 namespace packet {
+KickPacket::KickPacket() {}
 KickPacket::KickPacket(const utils::UTF16String &reason) : reason(reason) {}
 
 void KickPacket::writeData(Buffer &buffer) {
@@ -12,5 +15,10 @@ void KickPacket::writeData(Buffer &buffer) {
   buffer.writeUTF16String(this->reason);
 }
 
-void KickPacket::readData(Buffer &buffer) {}
+void KickPacket::readData(Buffer &buffer) {
+  this->reason = buffer.readUTF16String();
+}
+utils::UTF16String KickPacket::getReason() const {
+  return this->reason;
+}
 } // namespace packet

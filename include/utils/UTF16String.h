@@ -23,6 +23,7 @@ public:
 
   int size() const;
   UTF16String &operator+=(const UTF16String &);
+  UTF16String &operator+=(const unsigned short);
   UTF16String operator+(const UTF16String &);
   unsigned short operator[](unsigned int);
   const unsigned short operator[](unsigned int) const;
@@ -30,6 +31,7 @@ public:
   std::string toString() const;
   std::ostream &display(std::ostream &) const;
   void append(const UTF16String &);
+  void append(unsigned short character);
   void append(int nbr);
 
   UTF16String operator+(const UTF16String &string) const;

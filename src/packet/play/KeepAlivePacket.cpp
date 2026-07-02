@@ -3,14 +3,17 @@
 // Created by tetram26 on 03/08/25.
 //
 namespace packet {
-KeepAlivePacket::KeepAlivePacket() : milliseconds(0) {}
-KeepAlivePacket::KeepAlivePacket(int milliseconds) : milliseconds(milliseconds) {}
+KeepAlivePacket::KeepAlivePacket() : garbage(0) {}
+KeepAlivePacket::KeepAlivePacket(int milliseconds) : garbage(milliseconds) {}
 void KeepAlivePacket::writeData(Buffer &buffer) {
   buffer.writeByte(0x0);
-  buffer.writeInt(milliseconds);
+  buffer.writeInt(garbage);
 }
 
 void KeepAlivePacket::readData(Buffer &buffer) {
-  milliseconds = buffer.readInt();
+  garbage = buffer.readInt();
+}
+int KeepAlivePacket::getGarbage() const {
+  return garbage;
 }
 } // namespace packet

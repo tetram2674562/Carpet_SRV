@@ -47,6 +47,10 @@ UTF16String &UTF16String::operator+=(const UTF16String &string) {
   this->append(string);
   return (*this);
 }
+UTF16String &UTF16String::operator+=(const unsigned short character) {
+  this->append(character);
+  return *this;
+}
 
 void UTF16String::append(const UTF16String &string) {
   if (string.length != 0) {
@@ -62,6 +66,20 @@ void UTF16String::append(const UTF16String &string) {
     this->characters = new_string;
     this->length = this->length + string.length;
   }
+}
+
+void UTF16String::append(const unsigned short character) {
+  unsigned short *new_string = new unsigned short[this->length + 1];
+  if (this->characters != nullptr) {
+    for (unsigned int i = 0; i < this->length; i++) {
+      new_string[i] = this->characters[i];
+    }
+    delete[] this->characters;
+  }
+  new_string[this->length] = character;
+
+  this->characters = new_string;
+  this->length++;
 }
 
 void UTF16String::append(int nbr) {

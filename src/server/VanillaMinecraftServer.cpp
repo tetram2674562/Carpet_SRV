@@ -113,6 +113,7 @@ void VanillaMinecraftServer::tick() {
     if (!player->getConnection().isAlive()) {
       ConsoleUtils::getInstance().printMessage("Client " + player->getName() +
                                                " disconnected.");
+      ConsoleUtils::getInstance().printMessage("deleting player.");
       delete player;
       players.erase(players.begin() + i);
     } else {

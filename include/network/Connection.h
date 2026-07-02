@@ -96,6 +96,8 @@ private:
   void handleKeepAlive();        // 0x00
   void handlePositionPacket();   // 0x0B
   void handleClientStatus();
+  void handleDisconnectPacket();
+  void handleTimePacket();
 
   typedef void (Connection::*PacketHandler)();
 

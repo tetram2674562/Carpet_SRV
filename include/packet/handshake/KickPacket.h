@@ -10,9 +10,11 @@
 namespace packet {
 class KickPacket : public Packet {
 public:
+  KickPacket();
   KickPacket(const utils::UTF16String &);
   void writeData(Buffer &);
   void readData(Buffer &);
+  utils::UTF16String getReason() const;
 
 private:
   utils::UTF16String reason;

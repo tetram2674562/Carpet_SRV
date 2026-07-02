@@ -7,7 +7,7 @@ using namespace std;
 
 namespace entity {
 Player::Player(const network::Connection::pointer &conn)
-    : connection(conn), renderDistance(20), showCape(true) {}
+    : Entity(), connection(conn), renderDistance(20), showCape(true) {}
 
 // Should be called everytick
 void Player::update() {}

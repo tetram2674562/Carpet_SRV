@@ -15,8 +15,10 @@
 #include "packet/play/KeepAlivePacket.h"
 #include "packet/play/player/ClientInfoPacket.h"
 #include "packet/play/player/PlayerAbilitiesPacket.h"
+#include "packet/play/player/PlayerMovePacket.h"
 #include "packet/play/player/PlayerPositionPacket.h"
 #include "packet/play/player/SpawnPointPacket.h"
+#include "packet/play/world/WorldTimePacket.h"
 #include "utils/ConsoleUtils.h"
 
 #include "utils/UTF16String.h"
@@ -25,7 +27,6 @@
 
 using namespace std;
 using namespace utils;
-
 namespace network {
 
 const std::map<unsigned char, Connection::PacketHandler>
@@ -37,6 +38,8 @@ const std::map<unsigned char, Connection::PacketHandler>
         {0x00, &Connection::handleKeepAlive},
         {0x0B, &Connection::handlePositionPacket},
         {0xCD,&Connection::handleClientStatus},
+        {0xFF,&Connection::handleDisconnectPacket},
+       {4, &Connection::handleTimePacket},
     };
 
 Connection::Connection(asio::io_context &io_context)
@@ -110,7 +113,6 @@ void Connection::disconnect(const UTF16String &reason) {
 
 void Connection::disconnect() {
   running = false;
-  ConsoleUtils::getInstance().printMessage("Disconnected: (unknown)");
   mustDisconnect = true;
 }
 
@@ -274,13 +276,15 @@ void Connection::handleClientInfo() {
   }
 }
 void Connection::handleKeepAlive() {
+    packet::KeepAlivePacket keep_alive_packet;
+    keep_alive_packet.readData(readBuffer);
     lastActivity = time(nullptr);
-    ConsoleUtils::getInstance().printMessage("keep alive");
+    ConsoleUtils::getInstance().printMessage("keep alive" + std::to_string(keep_alive_packet.getGarbage()));
 }
 void Connection::handlePositionPacket() {
   packet::PlayerPositionPacket positionPacket;
   positionPacket.readData(readBuffer);
-  if (player) {
+  if (player != nullptr) {
     player->setPosition(positionPacket.getX(), positionPacket.getY(),
                         positionPacket.getZ());
   }
@@ -296,7 +300,19 @@ void Connection::handleClientStatus() {
     addPacketToQueue(loginPacket);
     addPacketToQueue(new packet::SpawnPointPacket(0,0,0));
     addPacketToQueue(new packet::PlayerAbilitiesPacket);
+    addPacketToQueue(new packet::PlayerMovePacket);
   }
+}
+
+void Connection::handleDisconnectPacket() {
+  packet::KickPacket kick_packet;
+  kick_packet.readData(readBuffer);
+  ConsoleUtils::getInstance().printMessage("Disconnected : " + kick_packet.getReason().toString());
+  this->disconnect();
+}
+void Connection::handleTimePacket() {
+  packet::WorldTimePacket packet;
+  packet.readData(readBuffer);
 }
 
 } // namespace network
