@@ -98,6 +98,8 @@ private:
   void handleClientStatus();
   void handleDisconnectPacket();
   void handleTimePacket();
+  void handleChat();
+
 
   typedef void (Connection::*PacketHandler)();
 

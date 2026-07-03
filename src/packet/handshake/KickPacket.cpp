@@ -4,7 +4,6 @@
 
 #include "packet/handshake/KickPacket.h"
 
-#include "utils/ConsoleUtils.h"
 using namespace std;
 namespace packet {
 KickPacket::KickPacket() {}

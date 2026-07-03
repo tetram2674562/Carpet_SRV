@@ -13,6 +13,7 @@
 #include "packet/login/ServerAuthDataPacket.h"
 #include "packet/login/SharedKeyPacket.h"
 #include "packet/play/KeepAlivePacket.h"
+#include "packet/play/player/ChatPacket.h"
 #include "packet/play/player/ClientInfoPacket.h"
 #include "packet/play/player/PlayerAbilitiesPacket.h"
 #include "packet/play/player/PlayerMovePacket.h"
@@ -40,6 +41,7 @@ const std::map<unsigned char, Connection::PacketHandler>
         {0xCD,&Connection::handleClientStatus},
         {0xFF,&Connection::handleDisconnectPacket},
        {4, &Connection::handleTimePacket},
+      {3,&Connection::handleChat},
     };
 
 Connection::Connection(asio::io_context &io_context)
@@ -279,7 +281,7 @@ void Connection::handleKeepAlive() {
     packet::KeepAlivePacket keep_alive_packet;
     keep_alive_packet.readData(readBuffer);
     lastActivity = time(nullptr);
-    ConsoleUtils::getInstance().printMessage("keep alive" + std::to_string(keep_alive_packet.getGarbage()));
+    //ConsoleUtils::getInstance().printMessage("keep alive" + std::to_string(keep_alive_packet.getGarbage()));
 }
 void Connection::handlePositionPacket() {
   packet::PlayerPositionPacket positionPacket;
@@ -314,5 +316,19 @@ void Connection::handleTimePacket() {
   packet::WorldTimePacket packet;
   packet.readData(readBuffer);
 }
+
+void Connection::handleChat() {
+  if (this->player != nullptr) {
+    packet::ChatPacket chat_packet;
+    chat_packet.readData(readBuffer);
+    UTF16String message = chat_packet.getMessage();
+    ConsoleUtils::getInstance().printMessage(player->getName() + " > " + message.toString());
+    // Broadcast
+
+    packet::ChatPacket* answer = new packet::ChatPacket(player->getName() + " > " + message);
+    addPacketToQueue(answer);
+  }
+}
+
 
 } // namespace network
