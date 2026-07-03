@@ -1,6 +1,6 @@
 #include "packet/play/player/PlayerAbilitiesPacket.h"
 packet::PlayerAbilitiesPacket::PlayerAbilitiesPacket()
-    : invulnerable(false), flying(false), allowFlying(true),
+    : invulnerable(false), flying(true), allowFlying(true),
       creativeMode(true), flySpeed(10), walkSpeed(10) {}
 void packet::PlayerAbilitiesPacket::writeData(Buffer &buffer) {
   buffer.writeByte(0xCA);

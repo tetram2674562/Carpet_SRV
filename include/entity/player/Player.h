@@ -8,6 +8,7 @@
 
 #include "entity/Entity.h"
 #include "network/Connection.h"
+#include "packet/play/player/PlayerMovePacket.h"
 
 namespace network {
 class Connection;

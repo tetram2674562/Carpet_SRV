@@ -236,5 +236,11 @@ short Buffer::readUTF16Char() {
        (static_cast<std::uint16_t>(data[readPos++]) << 8) |
        static_cast<std::uint16_t>(data[readPos++]);
 }
+double Buffer::readFloat() {
+  float value;
+  std::memcpy(&value, data.data() + readPos, sizeof(float));
+  readPos += sizeof(float);
+  return value;
+}
 
 } // namespace packet

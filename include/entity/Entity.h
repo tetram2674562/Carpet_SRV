@@ -13,9 +13,14 @@ public:
   virtual void update() = 0;
   virtual world::Location getLocation() const;
   virtual void setPosition(double, double, double);
-
+  virtual void setYaw(double yaw);
+  virtual void setPitch(double pitch);
+  virtual void setOnGround(bool onGround);
 protected:
   world::Location location;
+  double yaw;
+  double pitch;
+  bool onGround;
 };
 
 } // namespace entity

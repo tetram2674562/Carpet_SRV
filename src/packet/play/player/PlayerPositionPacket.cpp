@@ -25,9 +25,14 @@ void PlayerPositionPacket::writeData(Buffer &buffer) {
 }
 
 void PlayerPositionPacket::readData(Buffer &buffer) {
-  this->location.set(buffer.readDouble(), buffer.readDouble(),
-                     buffer.readDouble());
+  double x,y;
+  x = buffer.readDouble();
+  y = buffer.readDouble();
   this->stance = buffer.readDouble();
+  this->location.set(x, y,
+                     buffer.readDouble());
+  this->yaw = buffer.readFloat();
+  this->pitch = buffer.readFloat();
   this->onGround = buffer.readBool();
 }
 
@@ -40,4 +45,12 @@ double PlayerPositionPacket::getZ() const { return this->location.getZ(); }
 double PlayerPositionPacket::getStance() const { return stance; }
 
 bool PlayerPositionPacket::isOnGround() const { return onGround; }
+double PlayerPositionPacket::getPitch() const {
+  return this->pitch;
+}
+double PlayerPositionPacket::getYaw() const {
+  return this->yaw;
+}
+
 } // namespace packet
+

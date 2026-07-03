@@ -62,6 +62,7 @@ public:
   void writeBool(bool val);
   void writeLong(long value);
   short readUTF16Char();
+  double readFloat();
 
 private:
   std::vector<unsigned char> data;

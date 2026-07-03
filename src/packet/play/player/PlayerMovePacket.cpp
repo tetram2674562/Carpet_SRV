@@ -6,4 +6,7 @@ namespace packet {
     buffer.writeBool(onGround);
   }
   void PlayerMovePacket::readData(Buffer &) {}
-}
+  bool PlayerMovePacket::getOnGround() const {
+    return this->onGround;
+  }
+  } // namespace packet

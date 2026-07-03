@@ -7,6 +7,8 @@ public:
   PlayerMovePacket();
   void writeData(Buffer &) override;
   void readData(Buffer &) override;
+  bool getOnGround() const;
+
 private:
   bool onGround;
 };

@@ -16,6 +16,7 @@
 #include "packet/play/player/ChatPacket.h"
 #include "packet/play/player/ClientInfoPacket.h"
 #include "packet/play/player/PlayerAbilitiesPacket.h"
+#include "packet/play/player/PlayerLookPacket.h"
 #include "packet/play/player/PlayerMovePacket.h"
 #include "packet/play/player/PlayerPositionPacket.h"
 #include "packet/play/player/SpawnPointPacket.h"
@@ -31,17 +32,19 @@ using namespace utils;
 namespace network {
 
 const std::map<unsigned char, Connection::PacketHandler>
-    Connection::PACKETS_HANDLERS{
-        {0xFE, &Connection::handleServerPingPacket},
-        {0x02, &Connection::handleHandshake},
-        {0xFC, &Connection::handleSharedKeyPacket},
-        {0xCC, &Connection::handleClientInfo},
-        {0x00, &Connection::handleKeepAlive},
-        {0x0B, &Connection::handlePositionPacket},
-        {0xCD,&Connection::handleClientStatus},
-        {0xFF,&Connection::handleDisconnectPacket},
-       {4, &Connection::handleTimePacket},
-      {3,&Connection::handleChat},
+    Connection::PACKETS_HANDLERS{{0xFE, &Connection::handleServerPingPacket},
+                                 {0x02, &Connection::handleHandshake},
+                                 {0xFC, &Connection::handleSharedKeyPacket},
+                                 {0xCC, &Connection::handleClientInfo},
+                                 {0x00, &Connection::handleKeepAlive},
+                                 {0x0B, &Connection::handlePositionPacket},
+                                 {0xCD, &Connection::handleClientStatus},
+                                 {0xFF, &Connection::handleDisconnectPacket},
+                                 {4, &Connection::handleTimePacket},
+                                 {3, &Connection::handleChat},
+                                 {0xd, &Connection::handlePlayerMovement},
+                                 {0xa, &Connection::handleFlying},
+                                  {0xc, &Connection::handleHeadMovement}
     };
 
 Connection::Connection(asio::io_context &io_context)
@@ -133,7 +136,8 @@ void Connection::handle_read(const asio::error_code &error, std::size_t size) {
   if (!error && size > 0) {
     if (cipher != nullptr) {
       lock_guard ciphLock(cipherMutex);
-      unsigned char* newBytesPtr = readBuffer.getDataBuffer().data() + readBuffer.read_pos();
+      unsigned char *newBytesPtr =
+          readBuffer.getDataBuffer().data() + readBuffer.read_pos();
       cipher->decrypt(newBytesPtr, newBytesPtr, size);
     }
 
@@ -250,7 +254,7 @@ void Connection::handleHandshake() {
 }
 void Connection::handleSharedKeyPacket() {
   if (status == LOGIN) {
-    packet::SharedKeyPacket* sharedKeyPacket = new packet::SharedKeyPacket;
+    packet::SharedKeyPacket *sharedKeyPacket = new packet::SharedKeyPacket;
     sharedKeyPacket->readData(readBuffer);
     if (verifyToken != sharedKeyPacket->getVerifyToken()) {
       disconnect();
@@ -258,7 +262,6 @@ void Connection::handleSharedKeyPacket() {
           "Expected the exact same verify token");
     }
     vector<unsigned char> val = sharedKeyPacket->getSharedSecret();
-
 
     addPacketToQueue(sharedKeyPacket);
     {
@@ -278,10 +281,11 @@ void Connection::handleClientInfo() {
   }
 }
 void Connection::handleKeepAlive() {
-    packet::KeepAlivePacket keep_alive_packet;
-    keep_alive_packet.readData(readBuffer);
-    lastActivity = time(nullptr);
-    //ConsoleUtils::getInstance().printMessage("keep alive" + std::to_string(keep_alive_packet.getGarbage()));
+  packet::KeepAlivePacket keep_alive_packet;
+  keep_alive_packet.readData(readBuffer);
+  lastActivity = time(nullptr);
+  // ConsoleUtils::getInstance().printMessage("keep alive" +
+  // std::to_string(keep_alive_packet.getGarbage()));
 }
 void Connection::handlePositionPacket() {
   packet::PlayerPositionPacket positionPacket;
@@ -300,7 +304,7 @@ void Connection::handleClientStatus() {
     status = PLAY;
     auto *loginPacket = new packet::LoginPacket;
     addPacketToQueue(loginPacket);
-    addPacketToQueue(new packet::SpawnPointPacket(0,0,0));
+    addPacketToQueue(new packet::SpawnPointPacket(0, 0, 0));
     addPacketToQueue(new packet::PlayerAbilitiesPacket);
     addPacketToQueue(new packet::PlayerMovePacket);
   }
@@ -309,7 +313,8 @@ void Connection::handleClientStatus() {
 void Connection::handleDisconnectPacket() {
   packet::KickPacket kick_packet;
   kick_packet.readData(readBuffer);
-  ConsoleUtils::getInstance().printMessage("Disconnected : " + kick_packet.getReason().toString());
+  ConsoleUtils::getInstance().printMessage("Disconnected : " +
+                                           kick_packet.getReason().toString());
   this->disconnect();
 }
 void Connection::handleTimePacket() {
@@ -322,13 +327,36 @@ void Connection::handleChat() {
     packet::ChatPacket chat_packet;
     chat_packet.readData(readBuffer);
     UTF16String message = chat_packet.getMessage();
-    ConsoleUtils::getInstance().printMessage(player->getName() + " > " + message.toString());
+    ConsoleUtils::getInstance().printMessage(player->getName() + " > " +
+                                             message.toString());
     // Broadcast
 
-    packet::ChatPacket* answer = new packet::ChatPacket(player->getName() + " > " + message);
+    packet::ChatPacket *answer =
+        new packet::ChatPacket(player->getName() + " > " + message);
     addPacketToQueue(answer);
   }
 }
+void Connection::handlePlayerMovement() {
+  packet::PlayerPositionPacket position_packet;
+  position_packet.readData(readBuffer);
+  player->setPosition(position_packet.getX(),
+                      position_packet.getY() - position_packet.getStance(),
+                      position_packet.getZ());
+  player->setYaw(position_packet.getYaw());
+  player->setPitch(position_packet.getPitch());
+}
+void Connection::handleFlying() {
+  packet::PlayerMovePacket move_packet;
+  move_packet.readData(readBuffer);
+  player->setOnGround(move_packet.getOnGround());
+}
+void Connection::handleHeadMovement() {
+  packet::PlayerLookPacket look_packet;
+  look_packet.readData(readBuffer);
 
+  player->setOnGround(look_packet.getOnGround());
+  player->setYaw(look_packet.getYaw());
+  player->setPitch(look_packet.getPitch());
+}
 
 } // namespace network

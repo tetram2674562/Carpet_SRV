@@ -99,7 +99,9 @@ private:
   void handleDisconnectPacket();
   void handleTimePacket();
   void handleChat();
-
+  void handlePlayerMovement();
+  void handleFlying();
+  void handleHeadMovement();
 
   typedef void (Connection::*PacketHandler)();
 
