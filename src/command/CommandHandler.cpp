@@ -51,22 +51,33 @@ void CommandHandler::CommandListener(CommandHandler *instance) {
       ConsoleUtils::getInstance().printMessage("[Server] Stopping...");
       self->shutdown();
       server::VanillaMinecraftServer::getServer().shutdown();
-    } else if (command == "kickall") {
-      ConsoleUtils::getInstance().printMessage("[Server] Kick from console!");
-      if (nbPlayer == 0) {
-        ConsoleUtils::getInstance().printMessage(
-            "[Server] There is no online players to kick...");
-      } else {
-        for (int i = 0; i < nbPlayer; ++i) {
-          entity::Player *player = playersSnapshot[i];
-          if (player) {
-            server::VanillaMinecraftServer::getServer().requestKickPlayer(
-                player, ConsoleUtils::createUTF16String(
-                            "Kicked from the server by the console."));
-          }
+    } else if (args[0] == "kick") {
+
+      if (args[0].size() < 2) {
+        ConsoleUtils::getInstance().printMessage("No player specified");
+        continue;
+      }
+      if (nbPlayer == 0)
+        continue;
+
+      std::string reason = "Kicked from the server by the console.";
+      if (args.size() > 2) {
+        reason += "\n reason : ";
+        for (int i = 2; i < args.size(); ++i) {
+          reason += args[i] + " ";
         }
-        ConsoleUtils::getInstance().printMessage(
-            "Kicked " + std::to_string(nbPlayer) + " players from the server.");
+      }
+      for (int i = 0; i < nbPlayer; ++i) {
+        entity::Player *player = playersSnapshot[i];
+        if (player && player->getName() == args[1]) {
+          ConsoleUtils::getInstance().printMessage(
+              "Kicked " + player->getName() + " player from the server.");
+
+          server::VanillaMinecraftServer::getServer().requestKickPlayer(
+              player, ConsoleUtils::createUTF16String(
+                          reason));
+        }
+
       }
     } else if (args[0] == "list") {
       if (nbPlayer == 0) {
